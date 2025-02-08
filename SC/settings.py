@@ -87,7 +87,7 @@ DATABASES = {
         'NAME': 'shecares_db',
         'USER': 'root',
         'PASSWORD': 'Aishna@0509@',
-        'HOST': '127.0.0.1',
+        'HOST': '192.168.1.21',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',    # To support emojis and special characters
