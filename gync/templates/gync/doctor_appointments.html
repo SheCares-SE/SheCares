@@ -1,0 +1,8 @@
+<h2>Appointment Requests</h2>
+{% for appointment in appointments %}
+    <p>{{ appointment.patient.username }} - {{ appointment.date }} at {{ appointment.time }}</p>
+    <a href="{% url 'confirm_appointment' appointment.id %}">Confirm</a>
+    <a href="{% url 'reject_appointment' appointment.id %}">Reject</a>
+{% empty %}
+    <p>No appointment requests</p>
+{% endfor %}

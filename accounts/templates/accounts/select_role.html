@@ -1,0 +1,6 @@
+<form method="post">
+    {% csrf_token %}
+    <label>Select your role:</label><br>
+    {{ form.as_p }}
+    <button type="submit">Next</button>
+</form>
