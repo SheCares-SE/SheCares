@@ -84,11 +84,11 @@ WSGI_APPLICATION = 'SC.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'shecares_db',
-        'USER': 'root',
-        'PASSWORD': 'Aishna@0509@',
-        'HOST': '192.168.1.21',
-        'PORT': '3306',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': 'AVNS_hc-dn7II8kXIfXaD-lH',
+        'HOST': 'mysql-337b6cc8-aishna-7a35.k.aivencloud.com',
+        'PORT': '26193',
         'OPTIONS': {
             'charset': 'utf8mb4',    # To support emojis and special characters
         },
