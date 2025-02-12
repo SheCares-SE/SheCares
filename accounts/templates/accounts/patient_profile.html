@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Patient Profile</h2>
+<p>Name: {{ patient.1 }} {{ patient.2 }}</p>
+<p>Email: {{ patient.3 }}</p>
+<p>Age: {{ patient.4 }}</p>
+
+<h3>Booked Appointments</h3>
+<ul>
+    {% for appointment in appointments %}
+        <li>{{ appointment.1 }} - {{ appointment.2 }} (Doctor: {{ appointment.3 }} {{ appointment.4 }}, Specialization: {{ appointment.5 }})</li>
+    {% empty %}
+        <p>No appointments booked.</p>
+    {% endfor %}
+</ul>
+{% endblock %}

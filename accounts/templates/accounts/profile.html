@@ -1,0 +1,29 @@
+<!-- templates/accounts/profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+</head>
+<body>
+    <h1>{{ user.username }}'s Profile</h1>
+    <p>Role: {{ user.role }}</p>
+    <p>First Name: {{ user.first_name }}</p>
+    <p>Last Name: {{ user.last_name }}</p>
+    <p>Email: {{ user.email }}</p>
+
+    <!-- For Doctor Profile -->
+    {% if profile.registration_number %}
+        <h3>Doctor Profile:</h3>
+        <p>Registration Number: {{ profile.registration_number }}</p>
+        <p>Specialization: {{ profile.specialization }}</p>
+    {% endif %}
+    
+    <!-- For Patient Profile -->
+    {% if profile.age %}
+        <h3>Patient Profile:</h3>
+        <p>Age: {{ profile.age }}</p>
+    {% endif %}
+
+</body>
+</html>

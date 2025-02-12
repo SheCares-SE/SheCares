@@ -2,6 +2,26 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm
 from .models import User, PatientProfile, DoctorProfile
+from gync.models import Appointment
+from gync.models import Doctor  # Fetch doctor data
+from patient.models import Patient  # Fetch patient data
+
+def edit_patient_profile(request):
+    """Handle editing of a patient's profile"""
+
+    profile, created = PatientProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = PatientSignupForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+
+    else:
+        form = PatientSignupForm(instance=profile)
+
+    return render(request, 'accounts/edit_patient_profile.html', {'form': form})
+
 
 def select_role_view(request):
     """Step 1: Ask for the role"""
@@ -66,3 +86,36 @@ def signup_view(request, role):
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
 
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
+
+
+def profile_view(request):
+    """Display the user's profile"""
+def profile_view(request):
+    user = request.user  # Get the currently logged-in user
+    
+    # Fetch the profile data based on the user's role
+    if user.role == 'doctor':
+        try:
+            profile = Doctor.objects.get(user=user)  # Fetch data from the doctor table
+        except Doctor.DoesNotExist:
+            return render(request, 'profile_error.html', {'message': 'Doctor profile not found.'})
+    elif user.role == 'patient':
+        try:
+            profile = Patient.objects.get(user=user)  # Fetch data from the patient table
+        except Patient.DoesNotExist:
+            return render(request, 'profile_error.html', {'message': 'Patient profile not found.'})
+    
+    # Return the profile page with user and profile data
+    return render(request, 'accounts/profile.html', {'user': user, 'profile': profile})
+
+def edit_doctor_profile(request):
+    # Edit doctor's profile
+    if request.method == 'POST':
+        form = DoctorSignupForm(request.POST, request.FILES, instance=request.user.doctorprofile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form =DoctorSignupForm(instance=request.user.doctorprofile)
+    return render(request, 'edit_doctor_profile.html', {'form': form})
+
