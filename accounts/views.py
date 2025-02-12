@@ -14,6 +14,25 @@ def select_role_view(request):
         form = RoleSelectionForm()
     return render(request, 'accounts/select_role.html', {'form': form})
 
+#priyanka
+def recommend_doctor_view(request):
+    """Fetch specializations and doctors based on selection"""
+    # Get distinct specializations from the database
+    specializations = DoctorProfile.objects.values_list('specialization', flat=True).distinct()
+
+    # Get selected specialization from user input
+    selected_specialization = request.GET.get('specialization', '')
+
+    # Fetch doctors based on the selected specialization
+    doctors = DoctorProfile.objects.filter(specialization=selected_specialization) if selected_specialization else []
+
+    return render(request, 'accounts/recommend_doctor.html', {
+        'specializations': specializations,
+        'doctors': doctors,
+        'selected_specialization': selected_specialization
+    })
+
+
 def signup_view(request, role):
     """Step 2: Show appropriate signup form based on role"""
     if role not in ['doctor', 'patient']:
@@ -31,7 +50,7 @@ def signup_view(request, role):
             user.save()
 
             if role == 'doctor':
-                DoctorProfile.objects.create(user=user, registration_number=form.cleaned_data['registration_number'])
+                DoctorProfile.objects.create(user=user, registration_number=form.cleaned_data['registration_number'],specialization=form.cleaned_data['specialization'])
             else:
                 PatientProfile.objects.create(user=user, age=form.cleaned_data['age'])
 

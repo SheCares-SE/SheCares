@@ -20,3 +20,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+#http://127.0.0.1:8000/login/
+#http://127.0.0.1:8000/select-role/
+#http://127.0.0.1:8000/recommend-doctor/
+#http://127.0.0.1:8000/book_appointment/
+

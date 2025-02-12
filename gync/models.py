@@ -3,6 +3,19 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+class Symptom(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class DoctorProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'doctor'})
+    specialization = models.CharField(max_length=255)
+    symptoms_treated = models.ManyToManyField(Symptom, related_name="doctors")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.specialization}"
 class Availability(models.Model):
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'doctor'})
     date = models.DateField()

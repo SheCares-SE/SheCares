@@ -1,0 +1,108 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find a Doctor</title>
+</head>
+<body>
+
+    <h2>Select Specialization</h2>
+    <form method="GET">
+        <select name="specialization" onchange="this.form.submit()">
+            <option value="">-- Select Specialization --</option>
+            {% for spec in specializations %}
+                <option value="{{ spec }}" {% if selected_specialization == spec %}selected{% endif %}>
+                    {{ spec }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <h2>Available Doctors</h2>
+    <ul>
+        {% for doctor in doctors %}
+            <li>
+                <strong>{{ doctor.user.username }}</strong> - {{ doctor.specialization }} <br>
+                Registration No: {{ doctor.registration_number }}
+            </li>
+        {% empty %}
+            <li>No doctors available for this specialization.</li>
+        {% endfor %}
+    </ul>
+    <h2>Select Specialization</h2>
+<select id="specializationDropdown" name="specialization" onchange="fetchDoctors()">
+    <option value="">-- Select Specialization --</option>
+</select>
+
+<h2>Available Doctors</h2>
+<ul id="doctorList">
+    <li>Select a specialization to view doctors.</li>
+</ul>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch('/api/specializations/')
+            .then(response => response.json())
+            .then(data => {
+                const dropdown = document.getElementById("specializationDropdown");
+                dropdown.innerHTML = '<option value="">-- Select Specialization --</option>';
+                
+                data.specializations.forEach(spec => {
+                    let formattedSpec = spec.charAt(0).toUpperCase() + spec.slice(1);
+                    let option = new Option(formattedSpec, spec);
+                    dropdown.appendChild(option);
+                });
+            });
+    });
+
+    function fetchDoctors() {
+        const selectedSpecialization = document.getElementById("specializationDropdown").value;
+        if (!selectedSpecialization) return;
+
+        fetch(`/recommend-doctor/?specialization=${selectedSpecialization}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById("doctorList").innerHTML = html;
+            });
+    }
+</script>
+
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find a Doctor</title>
+</head>
+<body>
+
+    <h2>Select Specialization</h2>
+    <form method="GET">
+        <select name="specialization" onchange="this.form.submit()">
+            <option value="">-- Select Specialization --</option>
+            {% for spec in specializations %}
+                <option value="{{ spec }}" {% if selected_specialization == spec %}selected{% endif %}>
+                    {{ spec }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <h2>Available Doctors</h2>
+    <ul>
+        {% for doctor in doctors %}
+            <li>
+                <strong>{{ doctor.user.username }}</strong> - {{ doctor.specialization }} <br>
+                Registration No: {{ doctor.registration_number }}
+            </li>
+        {% empty %}
+            <li>No doctors available for this specialization.</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>
