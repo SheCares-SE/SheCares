@@ -11,6 +11,7 @@ from gync.views import doctor_dashboard
 
 urlpatterns = [
     #  path('gync/', include('gync.urls')),
+    path('login/', views.login_view, name='login'),
     path('profile/', profile_view, name='profile'),
     path('edit-doctor-profile/', views.edit_doctor_profile, name='edit_doctor_profile'),
     path('edit-patient-profile/', views.edit_patient_profile, name='edit_patient_profile'),
@@ -18,8 +19,8 @@ urlpatterns = [
     path('signup/<str:role>/', signup_view, name='signup_step2'),
     path('login/', LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("login")), name="logout"),
-    path("patient/dashboard/", patient_dashboard, name="patient_dashboard"),
-    path("doctor/dashboard/", doctor_dashboard, name="doctor_dashboard"),
+    path("patient-dashboard/", patient_dashboard, name="patient_dashboard"),
+    path("doctor-dashboard/", doctor_dashboard, name="doctor_dashboard"),
      #priyanka
     path("recommend-doctor/", recommend_doctor_view, name="recommend_doctor"),  
     

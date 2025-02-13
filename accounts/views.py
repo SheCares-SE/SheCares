@@ -5,6 +5,52 @@ from .models import User, PatientProfile, DoctorProfile
 from gync.models import Appointment
 from gync.models import Doctor  # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
+from django.contrib import messages
+from django.db import connection
+from django.contrib.auth.hashers import check_password
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db import connection
+
+def login_view(request):
+    if request.method == 'POST':
+        # Get username and password from the POST data
+        username = request.POST.get('username').strip()
+        password = request.POST.get('password').strip()
+
+        # Query the database to get the user's hashed password
+        with connection.cursor() as cursor:
+            # The query to select the user based on username
+            query = "SELECT password, role FROM accounts_user WHERE username = %s"
+            cursor.execute(query, [username])
+            result = cursor.fetchone()  # Fetch one matching record
+
+        if result is not None:
+            stored_password_hash = result[0]
+            role = result[1].strip().lower()
+
+            # Use Django's check_password function to verify the password
+            if check_password(password, stored_password_hash):
+                if role == 'doctor':
+                    print("Redirecting to doctor dashboard")
+                    return redirect('doctor_dashboard')
+                elif role == 'patient':
+                    print("Redirecting to patient dashboard")
+                    return redirect('patient_dashboard')
+                else:
+                    print("Role not recognized")
+                    messages.error(request, "User role is not recognized.")
+                    return render(request, 'accounts/login.html')
+            else:
+                print("Incorrect password")
+                messages.error(request, "Incorrect password!")
+                return render(request, 'accounts/login.html')
+        else:
+            print("User not found")
+            messages.error(request, "User not found!")
+            return render(request, 'accounts/login.html')
+
+    return render(request, 'accounts/login.html')
 
 def edit_patient_profile(request):
     """Handle editing of a patient's profile"""
@@ -78,9 +124,9 @@ def signup_view(request, role):
 
             # Redirect based on role
             if role == 'doctor':
-                return redirect('gync:doctor_dashboard')  
+                return redirect('doctor_dashboard')  
             else:
-                return redirect('patient:patient_dashboard')  
+                return redirect('patient_dashboard')  
 
     else:
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
