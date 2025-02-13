@@ -1,5 +1,55 @@
-<html>
-    <body>
-        hey,doctor
-    </body>
+<!-- Gynecologist Dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gynecologist Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">SheCares - Gynecologist</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/appointments/">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile/">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/blog/">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/faq/">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login/">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="container mt-5">
+        <h2>Welcome, Dr. {{ gynecologist.name }}</h2>
+        <h3>Patient Appointments</h3>
+        <ul>
+            {% for appointment in appointments %}
+                <li>Patient: {{ appointment.patient.name }} - {{ appointment.date }} at {{ appointment.time }}
+                    <a href="/approve_appointment/{{ appointment.id }}/" class="btn btn-success btn-sm">Approve</a>
+                    <a href="/reject_appointment/{{ appointment.id }}/" class="btn btn-danger btn-sm">Reject</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="container mt-4">
+        <h3>Answer FAQs</h3>
+        {% for faq in unanswered_faqs %}
+            <div class="mb-3">
+                <strong>Q: {{ faq.question }}</strong>
+                <form method="post" action="/answer_faq/{{ faq.id }}/">
+                    <textarea name="answer" class="form-control" required></textarea>
+                    <button type="submit" class="btn btn-primary mt-2">Submit Answer</button>
+                </form>
+            </div>
+        {% endfor %}
+    </section>
+</body>
 </html>

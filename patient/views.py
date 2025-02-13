@@ -12,10 +12,10 @@ def book_appointment(request):
             appointment.patient = request.user
             appointment.status = 'Pending'
             appointment.save()
-            return redirect('patient_dashboard')
+            return redirect('/appointments/')
     else:
         form = AppointmentRequestForm()
-
+    
     return render(request, 'patient/book_appointment.html', {'form': form})
 
 @login_required
