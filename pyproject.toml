@@ -1,0 +1,11 @@
+[project]
+name = "shecares"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "black>=25.1.0",
+    "django>=4.2.19",
+    "mysqlclient>=2.2.7",
+]
