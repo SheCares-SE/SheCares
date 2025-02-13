@@ -2,6 +2,7 @@ from django.shortcuts import render , redirect
 from django.contrib.auth.decorators import login_required
 from .models import Availability, Appointment
 from .forms import AvailabilityForm
+from gync.models import DoctorProfile
 
 @login_required
 def doctor_dashboard(request):
@@ -39,3 +40,11 @@ def reject_appointment(request, appointment_id):
     appointment.status = 'Rejected'
     appointment.save()
     return redirect('doctor_appointments')
+
+
+def get_doctor_profile_view(request, doctor_id):
+    try:
+        doctor = DoctorProfile.objects.get(id=doctor_id)
+        return render(request, 'doctor_profile.html', {'doctor': doctor})
+    except DoctorProfile.DoesNotExist:
+        return render(request, '404.html') # Or any other error page
