@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Availability, Appointment
 from .forms import AvailabilityForm
 from gync.models import DoctorProfile
+from .models import Doctor  # or the correct model class
 
 @login_required
 def doctor_dashboard(request):
@@ -22,10 +23,22 @@ def update_availability(request):
 
     return render(request, "gync/update_availability.html", {"form": form})
 
+# @login_required
+# def doctor_appointments(request):
+#     appointments = Appointment.objects.filter(doctor=request.user)
+#     return render(request, 'gync/doctor_appointments.html', {'appointments': appointments})
+
 @login_required
 def doctor_appointments(request):
-    appointments = Appointment.objects.filter(doctor=request.user)
+    # ✅ Get the doctor profile from the logged-in user
+    doctor = Doctor.objects.get(user=request.user)  
+
+    # ✅ Filter appointments where this doctor is assigned
+    appointments = Appointment.objects.filter(doctor=doctor)  
+
     return render(request, 'gync/doctor_appointments.html', {'appointments': appointments})
+
+
 
 @login_required
 def confirm_appointment(request, appointment_id):

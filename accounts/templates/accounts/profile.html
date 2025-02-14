@@ -1,29 +1,25 @@
-<!-- templates/accounts/profile.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ request.user.username }}'s Profile</title>
 </head>
 <body>
-    <h1>{{ user.username }}'s Profile</h1>
-    <p>Role: {{ user.role }}</p>
-    <p>First Name: {{ user.first_name }}</p>
-    <p>Last Name: {{ user.last_name }}</p>
-    <p>Email: {{ user.email }}</p>
-
-    <!-- For Doctor Profile -->
-    {% if profile.registration_number %}
-        <h3>Doctor Profile:</h3>
-        <p>Registration Number: {{ profile.registration_number }}</p>
-        <p>Specialization: {{ profile.specialization }}</p>
-    {% endif %}
+    <h1>{{ request.user.username }}'s Profile</h1>
     
-    <!-- For Patient Profile -->
-    {% if profile.age %}
-        <h3>Patient Profile:</h3>
-        <p>Age: {{ profile.age }}</p>
+    {% if profile %}
+        {% if request.user.role == 'patient' %}
+            <h2>Patient Profile</h2>
+            <p>Age: {{ profile.age }}</p>
+            <p>Profile Privacy: {% if profile.is_private %}Private{% else %}Public{% endif %}</p>
+        {% elif request.user.role == 'doctor' %}
+            <h2>Doctor Profile</h2>
+            <p>Registration Number: {{ profile.registration_number }}</p>
+            <p>Specialization: {{ profile.specialization }}</p>
+        {% endif %}
+    {% else %}
+        <p>No profile data available.</p>
     {% endif %}
-
 </body>
 </html>

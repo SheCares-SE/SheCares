@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% comment %} <h2>Doctor Profile</h2> {% endcomment %}
+
+{% if doctor %}
+    <p><strong>Registration Number:</strong> {{ doctor.registration_no }}</p>
+    <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+{% else %}
+    <p>No profile data found.</p>
+{% endif %}
+{% endblock %}
