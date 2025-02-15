@@ -20,66 +20,66 @@
     </form>
 
     <h2>Available Doctors</h2>
+{% if doctors %}
     <ul>
         {% for doctor in doctors %}
-            <li>
-                <strong>{{ doctor.user.username }}</strong> - {{ doctor.specialization }} <br>
-                Registration No: {{ doctor.registration_number }}
-            </li>
-        {% empty %}
-            <li>No doctors available for this specialization.</li>
+            <li>Dr. {{ doctor.0 }} (Registration No: {{ doctor.1 }}, Specialization: {{ doctor.2 }})</li>
         {% endfor %}
     </ul>
-    <h2>Select Specialization</h2>
-<select id="specializationDropdown" name="specialization" onchange="fetchDoctors()">
-    <option value="">-- Select Specialization --</option>
-</select>
-
-<h2>Available Doctors</h2>
-<ul id="doctorList">
-    <li>Select a specialization to view doctors.</li>
-</ul>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        fetch('/api/specializations/')
-            .then(response => response.json())
-            .then(data => {
-                const dropdown = document.getElementById("specializationDropdown");
-                dropdown.innerHTML = '<option value="">-- Select Specialization --</option>';
-                
-                data.specializations.forEach(spec => {
-                    let formattedSpec = spec.charAt(0).toUpperCase() + spec.slice(1);
-                    let option = new Option(formattedSpec, spec);
-                    dropdown.appendChild(option);
-                });
-            });
-    });
-
-    function fetchDoctors() {
-        const selectedSpecialization = document.getElementById("specializationDropdown").value;
-        if (!selectedSpecialization) return;
-
-        fetch(`/recommend-doctor/?specialization=${selectedSpecialization}`)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById("doctorList").innerHTML = html;
-            });
-    }
-</script>
-
+{% else %}
+    <p>No doctors available for this specialization.</p>
+{% endif %}
 
 </body>
 </html> -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Find a Doctor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding: 20px;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin: 20px auto;
+            width: 300px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: left;
+        }
+        p {
+            color: #777;
+        }
+    </style>
 </head>
 <body>
-
     <h2>Select Specialization</h2>
     <form method="GET">
         <select name="specialization" onchange="this.form.submit()">
@@ -93,16 +93,18 @@
     </form>
 
     <h2>Available Doctors</h2>
-    <ul>
-        {% for doctor in doctors %}
-            <li>
-                <strong>{{ doctor.user.username }}</strong> - {{ doctor.specialization }} <br>
-                Registration No: {{ doctor.registration_number }}
-            </li>
-        {% empty %}
-            <li>No doctors available for this specialization.</li>
-        {% endfor %}
-    </ul>
-
+    {% if doctors %}
+        <ul>
+            {% for doctor in doctors %}
+                <li>
+                    <strong>Dr. {{ doctor.0 }}</strong><br>
+                    <small>Registration No: {{ doctor.1 }}</small><br>
+                    <small>Specialization: {{ doctor.2 }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No doctors available for this specialization.</p>
+    {% endif %}
 </body>
 </html>

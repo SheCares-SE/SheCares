@@ -25,3 +25,7 @@ if __name__ == '__main__':
 #http://127.0.0.1:8000/recommend-doctor/
 #http://127.0.0.1:8000/book_appointment/
 
+# use defaultdb;
+# SET SQL_SAFE_UPDATES = 0;
+# UPDATE doctor_table SET specialization = LOWER(specialization);
+# SET SQL_SAFE_UPDATES = 1;

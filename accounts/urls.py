@@ -7,7 +7,7 @@ from gync.views import doctor_dashboard
 from . import views
 
 urlpatterns = [
-    path("gync/", include("gync.urls", namespace="gync")),
+    #path("gync/", include("gync.urls", namespace="gync")),
     path('doctor-dashboard/', doctor_dashboard, name='doctor_dashboard'),
     path('patient-dashboard/', patient_dashboard, name='patient_dashboard'),
     path('profile/', views.profile_view, name='profile'),

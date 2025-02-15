@@ -85,17 +85,46 @@ def select_role_view(request):
     return render(request, 'accounts/select_role.html', {'form': form})
 
 #priyanka
+# def recommend_doctor_view(request):
+#     """Fetch specializations and doctors based on selection"""
+#     # Get distinct specializations from the database
+#     specializations = DoctorProfile.objects.values_list('specialization', flat=True).distinct()
+
+#     # Get selected specialization from user input
+#     selected_specialization = request.GET.get('specialization', '')
+
+#     # Fetch doctors based on the selected specialization
+#     doctors = DoctorProfile.objects.filter(specialization=selected_specialization) if selected_specialization else []
+
+#     return render(request, 'accounts/recommend_doctor.html', {
+#         'specializations': specializations,
+#         'doctors': doctors,
+#         'selected_specialization': selected_specialization
+#     })
+
 def recommend_doctor_view(request):
-    """Fetch specializations and doctors based on selection"""
-    # Get distinct specializations from the database
-    specializations = DoctorProfile.objects.values_list('specialization', flat=True).distinct()
+    """Fetch specializations and doctors based on selection using raw MySQL queries"""
 
-    # Get selected specialization from user input
-    selected_specialization = request.GET.get('specialization', '')
+    with connection.cursor() as cursor:
+        # Get distinct specializations from the database
+        cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
+        specializations = [row[0] for row in cursor.fetchall()]
 
-    # Fetch doctors based on the selected specialization
-    doctors = DoctorProfile.objects.filter(specialization=selected_specialization) if selected_specialization else []
+        # Get selected specialization from user input
+        selected_specialization = request.GET.get('specialization', '').lower()
 
+        # Fetch doctors based on the selected specialization
+        doctors = []
+        if selected_specialization:
+            cursor.execute("""
+                SELECT accounts_user.username, doctor_table.registration_number, doctor_table.specialization
+                FROM doctor_table 
+                JOIN accounts_user ON doctor_table.user_id = accounts_user.id
+                WHERE doctor_table.specialization = LOWER(%s)
+            """, [selected_specialization])
+            
+            doctors = cursor.fetchall()  # Returns list of tuples (username, registration_number, specialization)
+    
     return render(request, 'accounts/recommend_doctor.html', {
         'specializations': specializations,
         'doctors': doctors,
