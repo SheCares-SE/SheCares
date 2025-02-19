@@ -7,16 +7,13 @@ from gync.models import Doctor  # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
 from django.contrib import messages
 from django.db import connection
-<<<<<<< HEAD
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import render, redirect,get_object_or_404
 
-=======
 from django.contrib.auth.hashers import check_password , make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import connection
->>>>>>> 5bfad6a7ac9445896344d1e9491d1784159e32ee
 from django.contrib.auth.decorators import login_required
 from .models import Question, Answer
 from django.contrib.auth import get_user_model

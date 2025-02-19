@@ -22,7 +22,7 @@ urlpatterns = [
      #priyanka
     path("recommend-doctor/", recommend_doctor_view, name="recommend_doctor"), 
      #Urvashi
-   path("faq/", faq_page, name="faq_page"),
+    path("faq/", faq_page, name="faq_page"),
     path("faq/add_question/", add_question, name="add_question"),
     path("faq/add_answer/<int:question_id>/", add_answer, name="add_answer"),
   
