@@ -8,10 +8,17 @@ from patient.models import Patient  # Fetch patient data
 from django.contrib import messages
 from django.db import connection
 from django.contrib.auth.hashers import check_password
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.db import connection
+from django.shortcuts import render, redirect,get_object_or_404
+
 from django.contrib.auth.decorators import login_required
+from .models import Question, Answer
+from django.contrib.auth import get_user_model
+
+from django.contrib.auth.decorators import login_required
+from .models import Question, Answer
+from django.utils.timezone import now
+
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -267,3 +274,70 @@ def profile_view(request):
                 }
 
     return render(request, 'accounts/profile.html', {'profile': profile_data})
+
+#Urvashi
+
+
+
+
+
+@login_required
+def faq_page(request):
+    if request.method == "POST":
+        # Determine if a question or answer is being submitted
+        if 'question_text' in request.POST:
+            question_text = request.POST.get("question_text")
+            if question_text:
+                Question.objects.create(user=request.user, text=question_text)
+                messages.success(request, "Question submitted successfully!")
+            else:
+                messages.error(request, "Question cannot be empty.")
+        elif 'answer_text' in request.POST:
+            question_id = request.POST.get("qus_id")
+            answer_text = request.POST.get("answer_text")
+            question = get_object_or_404(Question, qus_id=question_id)
+            
+            # Ensure only gynecologists can answer:
+            if request.user.role == "doctor":
+                if answer_text:
+                    Answer.objects.create(user=request.user, qus=question, text=answer_text)
+                    messages.success(request, "Answer submitted successfully!")
+                else:
+                    messages.error(request, "Answer cannot be empty.")
+            else:
+                messages.error(request, "Only gynecologists can answer questions.")
+        return redirect("faq_page")
+
+    questions = Question.objects.all().order_by("-created_at")
+    return render(request, "accounts/faq.html", {"questions": questions})
+
+@login_required
+def add_question(request):
+    # This view can be used for a separate "Add Question" page if needed.
+    # For our one-page FAQ, the form is handled in faq_page.
+    return redirect("faq_page")
+
+@login_required
+def add_answer(request, question_id):
+    # This view is now handled in faq_page via POST data.
+    return redirect("faq_page")
+
+# @login_required
+# def add_answer(request, question_id):
+#     question = get_object_or_404(Question, qus_id=question_id)
+    
+#     # Check that the user has the doctor role (assuming doctor role is stored as "doctor")
+#     if request.user.role != "doctor":
+#         messages.error(request, "Only doctors can answer questions.")
+#         return redirect("faq_page")
+    
+#     if request.method == "POST":
+#         answer_text = request.POST.get("answer_text")
+#         if answer_text:
+#             Answer.objects.create(user=request.user, qus=question, text=answer_text)
+#             messages.success(request, "Answer submitted successfully!")
+#         else:
+#             messages.error(request, "Answer cannot be empty.")
+#     return redirect("faq_page")
+
+
