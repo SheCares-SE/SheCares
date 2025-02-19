@@ -7,7 +7,7 @@ from gync.models import Doctor  # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
 from django.contrib import messages
 from django.db import connection
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password , make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import connection
@@ -132,6 +132,10 @@ def recommend_doctor_view(request):
     })
 
 
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from .models import User  # Import the custom User model from the accounts app
+
 def signup_view(request, role):
     """Step 2: Show appropriate signup form based on role"""
     if role not in ['doctor', 'patient']:
@@ -144,15 +148,59 @@ def signup_view(request, role):
             form = PatientSignupForm(request.POST)
 
         if form.is_valid():
-            user = form.save(commit=False)
-            user.role = role
-            user.save()
+            user_data = form.cleaned_data
+            user_role = role
+
+            # Retrieve and hash the password separately
+            password = request.POST.get('password1')  # Change to the correct field name in your form
+            if not password:
+                form.add_error('password1', 'Password is required.')
+                return render(request, 'accounts/signup.html', {'form': form, 'role': role})
+
+            hashed_password = make_password(password)
+
+            # Insert user into the accounts_user table with necessary fields and default values
+            date_joined = timezone.now()
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO accounts_user (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, role, profile_picture, date_joined)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, [
+                    user_data.get('username', 'default_username'), 
+                    user_data.get('email', 'default@example.com'), 
+                    hashed_password, 
+                    user_data.get('first_name', 'First'), 
+                    user_data.get('last_name', 'Last'), 
+                    False, 
+                    False, 
+                    True, 
+                    user_role,
+                    user_data.get('profile_picture', ''),  # Assuming this field can be empty
+                    date_joined
+                ])
+                
+                # Get the inserted user ID
+                cursor.execute("SELECT LAST_INSERT_ID()")
+                user_id = cursor.fetchone()[0]
 
             if role == 'doctor':
-                DoctorProfile.objects.create(user=user, registration_number=form.cleaned_data['registration_number'],specialization=form.cleaned_data['specialization'])
+                # Insert doctor profile into the doctor_table
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO doctor_table (user_id, registration_number, specialization)
+                        VALUES (%s, %s, %s)
+                    """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization')])
             else:
-                PatientProfile.objects.create(user=user, age=form.cleaned_data['age'])
+                # Insert patient profile into the accounts_patient_profile_table
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO accounts_patient_profile_table (user_id, age, is_private)
+                        VALUES (%s, %s, %s)
+                    """, [user_id, user_data.get('age', 30), user_data.get('is_private', False)])
 
+            # Authenticate and login user
+            user = User.objects.get(pk=user_id)
             login(request, user)
 
             # Redirect based on role
@@ -165,8 +213,6 @@ def signup_view(request, role):
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
 
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
-
-
 # def signup_view(request, role):
 #     """Step 2: Show appropriate signup form based on role using SQL queries"""
 #     if role not in ['doctor', 'patient']:
