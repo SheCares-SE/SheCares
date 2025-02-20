@@ -11,6 +11,8 @@ from django.contrib.auth.hashers import check_password , make_password
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import connection
+from django.utils import timezone
+from .models import User  # Import the custom User model from the accounts app
 from django.contrib.auth.decorators import login_required
 
 def login_view(request):
@@ -132,10 +134,6 @@ def recommend_doctor_view(request):
     })
 
 
-from django.contrib.auth.hashers import make_password
-from django.utils import timezone
-from .models import User  # Import the custom User model from the accounts app
-
 def signup_view(request, role):
     """Step 2: Show appropriate signup form based on role"""
     if role not in ['doctor', 'patient']:
@@ -213,70 +211,6 @@ def signup_view(request, role):
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
 
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
-# def signup_view(request, role):
-#     """Step 2: Show appropriate signup form based on role using SQL queries"""
-#     if role not in ['doctor', 'patient']:
-#         return redirect('select_role')
-
-#     if request.method == 'POST':
-#         if role == 'doctor':
-#             form = DoctorSignupForm(request.POST)
-#         else:
-#             form = PatientSignupForm(request.POST)
-
-#         if form.is_valid():
-#             username = form.cleaned_data['username']
-#             email = form.cleaned_data['email']
-#             password1 = form.cleaned_data['password1']
-#             password2 = form.cleaned_data['password2']
-
-#             # SQL Insert Query for creating a User with necessary fields
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                     INSERT INTO accounts_user (username, email, password, role, is_superuser, is_staff, date_joined)
-#                     VALUES (%s, %s, %s, %s, %s, %s, NOW())
-#                 """, [username, email, password1, role, False, False])  # Set is_superuser and is_staff to False
-
-#             # Fetch the last inserted user_id
-#             with connection.cursor() as cursor:
-#                 cursor.execute("SELECT id FROM accounts_user WHERE username = %s", [username])
-#                 user_id = cursor.fetchone()[0]
-
-#             # Create Doctor or Patient Profile using raw SQL Insert
-#             if role == 'doctor':
-#                 registration_number = form.cleaned_data['registration_number']
-#                 specialization = form.cleaned_data['specialization']
-#                 with connection.cursor() as cursor:
-#                     cursor.execute("""
-#                         INSERT INTO doctor_table (user_id, registration_number, specialization)
-#                         VALUES (%s, %s, %s)
-#                     """, [user_id, registration_number, specialization])
-
-#             elif role == 'patient':
-#                 age = form.cleaned_data['age']
-#                 with connection.cursor() as cursor:
-#                     cursor.execute("""
-#                         INSERT INTO accounts_patient_profile_table (user_id, age, is_private)
-#                         VALUES (%s, %s, 0)  -- Setting is_private to 0 by default
-#                     """, [user_id, age])
-
-#             # After saving, log the user in
-#             user = User.objects.get(id=user_id)
-#             login(request, user)
-
-#             # Redirect based on role
-#             if role == 'doctor':
-#                 return redirect('doctor_dashboard')  
-#             else:
-#                 return redirect('patient_dashboard')  
-
-#     else:
-#         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
-
-#     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
-
-
-
 
 @login_required
 def profile_view(request):
@@ -313,3 +247,5 @@ def profile_view(request):
                 }
 
     return render(request, 'accounts/profile.html', {'profile': profile_data})
+
+
