@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Appointment Requests</title>
+</head>
+<body>
+    <h1>Appointment Requests</h1>
+
+    {% if requests %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Patient Name</th>
+                    <th>Patient Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                    <tr>
+                        <td>{{ request.1 }}</td>
+                        <td>{{ request.2 }}</td>
+                        <td>{{ request.4 }}</td>
+                        <td>{{ request.5 }}</td>
+                        <td>
+                            <a href="{% url 'gync:approve_request' request.0 %}">Approve</a>
+                            <a href="{% url 'gync:reject_request' request.0 %}">Reject</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No appointment requests at the moment.</p>
+    {% endif %}
+</body>
+</html>

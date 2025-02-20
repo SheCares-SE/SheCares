@@ -16,12 +16,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/appointments/">Appointments</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/recommend-doctor/">Recommended-Doctor</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/profile/">Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/blog/">Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/faq/">FAQ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/login/">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+                    {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'blog:list' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'faq:list' %}">FAQ</a></li> {% endcomment %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -47,13 +47,14 @@
         {% endfor %}
     </section>
 
-    <h2>Recent Blogs</h2>
-    <ul>
-    {% for blog in blogs %}
-        <li><strong>{{ blog.title }}</strong> by {{ blog.author.username }}</li>
-        <p>{{ blog.content }}</p>
-    {% endfor %}
-</ul>
+    <section class="container mt-4">
+        <h3>Recent Blogs</h3>
+        <ul>
+            {% for blog in blogs %}
+                <li><strong>{{ blog.title }}</strong> by {{ blog.author.username }}</li>
+                <p>{{ blog.content }}</p>
+            {% endfor %}
+        </ul>
+    </section>
 </body>
 </html>
-

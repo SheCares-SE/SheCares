@@ -16,14 +16,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    {% comment %} <li class="nav-item"><a class="nav-link" href="/appointments-doctor/"> Appointments </a></li> {% endcomment %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'gync:doctor_appointments' %}"> Appointments </a></li>
-                    <li class="nav-item"><a class="nav-link" href="/recommend-doctor/">  Recommended-Doctor  </a></li>
-                    <li class="nav-item"><a class="nav-link" href="/profile/"> Profile </a></li>
-                    <li class="nav-item"><a class="nav-link" href="/blog/">Blog</a></li>
-                    {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li> error de raha hai{% endcomment %} 
-                    <li class="nav-item"><a class="nav-link" href="/login/">Logout</a></li>
-                    
+                    <li class="nav-item"><a class="nav-link" href="{% url 'gync:doctor_appointments' %}">Appointments</a></li>
+                    {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'patient:recommend_doctor' %}">Recommended-Doctor</a></li> {% endcomment %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+                    {% comment %} <li class="nav-item"><a class="nav-link" href="/blogs/">Blog</a></li> {% endcomment %}
+                    {% comment %} <li class="nav-item"><a class="nav-link" href="{% url 'faq:list' %}">FAQ</a></li> {% endcomment %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -35,8 +33,8 @@
         <ul>
             {% for appointment in appointments %}
                 <li>Patient: {{ appointment.patient.name }} - {{ appointment.date }} at {{ appointment.time }}
-                    <a href="/approve_appointment/{{ appointment.id }}/" class="btn btn-success btn-sm">Approve</a>
-                    <a href="/reject_appointment/{{ appointment.id }}/" class="btn btn-danger btn-sm">Reject</a>
+                    <a href="{% url 'gync:approve_request' appointment.id %}" class="btn btn-success btn-sm">Approve</a>
+                    <a href="{% url 'gync:reject_request' appointment.id %}" class="btn btn-danger btn-sm">Reject</a>
                 </li>
             {% endfor %}
         </ul>
@@ -47,7 +45,7 @@
         {% for faq in unanswered_faqs %}
             <div class="mb-3">
                 <strong>Q: {{ faq.question }}</strong>
-                <form method="post" action="/answer_faq/{{ faq.id }}/">
+                <form method="post" action="{% url 'faq:answer_faq' faq.id %}">
                     <textarea name="answer" class="form-control" required></textarea>
                     <button type="submit" class="btn btn-primary mt-2">Submit Answer</button>
                 </form>

@@ -60,6 +60,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
+            os.path.join(BASE_DIR, 'accounts', 'templates'),
             os.path.join(BASE_DIR, 'templates'),  # Global templates folder
             os.path.join(BASE_DIR, 'patient', 'templates'),  # Patient app templates
             os.path.join(BASE_DIR, 'gync', 'templates'),  # Gync app templates
