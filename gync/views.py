@@ -3,8 +3,10 @@ from django.contrib.auth.decorators import login_required
 from .models import Availability, Appointment
 from .forms import AvailabilityForm
 from gync.models import DoctorProfile
-from django.shortcuts import  get_object_or_404
-from gync.models import Appointment
+from SC.shared_models import Blog
+from .forms import BlogForm
+from django.shortcuts import get_object_or_404
+
 
 @login_required
 def doctor_dashboard(request):
@@ -38,5 +40,32 @@ def doctor_appointments(request):
 
 
 def get_doctor_profile_view(request, doctor_id):
-    doctor_profile = get_object_or_404(DoctorProfile, id=doctor_id)
-    return render(request, 'gync/doctor_profile.html', {'doctor_profile': doctor_profile})
+    try:
+        doctor = DoctorProfile.objects.get(id=doctor_id)
+        return render(request, 'doctor_profile.html', {'doctor': doctor})
+    except DoctorProfile.DoesNotExist:
+        return render(request, '404.html') # Or any other error page
+    
+
+@login_required
+def blog_list(request):
+    blogs = Blog.objects.filter(author=request.user)
+    return render(request, 'gync/blog_list.html', {'blogs': blogs})
+
+@login_required
+def blog_create(request):
+    if request.method == "POST":
+        form = BlogForm(request.POST)
+        if form.is_valid():
+            blog = form.save(commit=False)
+            blog.author = request.user
+            blog.save()
+            return redirect('blog_list')
+    else:
+        form = BlogForm()
+    return render(request, 'gync/blog_create.html', {'form': form})
+
+@login_required
+def blog_detail(request, blog_id):
+    blog = get_object_or_404(Blog, id=blog_id)
+    return render(request, 'gync/blog_detail.html', {'blog': blog})

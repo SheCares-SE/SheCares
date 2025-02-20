@@ -57,6 +57,7 @@ from django.shortcuts import render , redirect
 from django.contrib.auth.decorators import login_required
 from gync.models import Appointment, Availability
 from gync.forms import AppointmentRequestForm
+from SC.shared_models import Blog
 
 @login_required
 def book_appointment(request):
@@ -80,3 +81,7 @@ def patient_appointments(request):
 @login_required
 def patient_dashboard(request):
     return render(request, 'patient_dashboard.html')
+
+def patient_dashboard(request):
+    blogs = Blog.objects.all()
+    return render(request, 'patient/patient_dashboard.html', {'blogs': blogs})

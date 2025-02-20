@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from SC.shared_models import Blog 
 
 User = get_user_model()
 
@@ -53,3 +54,10 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment with {self.doctor.user.username} on {self.date} at {self.time} - {self.status}"
+    
+    class GyncProfile(models.Model):
+       user = models.OneToOneField(User, on_delete=models.CASCADE)
+       specialization = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.user.username
