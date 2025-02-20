@@ -1,0 +1,7 @@
+<h2>My Blogs</h2>
+<a href="{% url 'gync:blog_create' %}">Create New Blog</a>
+<ul>
+    {% for blog in blogs %}
+       <li><a href="{% url 'gync:blog_detail' blog.id %}">{{ blog.title }}</a></li>
+    {% endfor %}
+</ul>

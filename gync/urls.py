@@ -2,6 +2,7 @@ from django.urls import path
 from .views import doctor_dashboard
 from .views import update_availability, doctor_appointments, confirm_appointment, reject_appointment
 from . import views
+from .views import blog_list, blog_create, blog_detail
 
 app_name = 'gync'  # ✅ Define the app namespace
 
@@ -13,5 +14,8 @@ urlpatterns = [
     path('appointments-doctor/', doctor_appointments, name='doctor_appointments'),
     path('confirm_appointment/<int:appointment_id>/', confirm_appointment, name='confirm_appointment'),
     path('reject_appointment/<int:appointment_id>/', reject_appointment, name='reject_appointment'),
+    path('blogs/', blog_list, name='blog_list'),
+    path('blogs/create/',blog_create, name='blog_create'),
+    path('blogs/<int:blog_id>/', blog_detail, name='blog_detail'),
     
 ]

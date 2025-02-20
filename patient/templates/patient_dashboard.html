@@ -46,6 +46,14 @@
             </div>
         {% endfor %}
     </section>
+
+    <h2>Recent Blogs</h2>
+    <ul>
+    {% for blog in blogs %}
+        <li><strong>{{ blog.title }}</strong> by {{ blog.author.username }}</li>
+        <p>{{ blog.content }}</p>
+    {% endfor %}
+</ul>
 </body>
 </html>
 
