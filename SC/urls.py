@@ -23,5 +23,7 @@ urlpatterns = [
     path("",include("patient.urls")),
     #path("",include("gync.urls")),
     path("gync/", include("gync.urls", namespace="gync")),
-
+    #  path('faq/', include('accounts.urls')),
+    path('', include('accounts.urls')),
+     
 ]

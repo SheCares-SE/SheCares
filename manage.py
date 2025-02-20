@@ -24,6 +24,7 @@ if __name__ == '__main__':
 #http://127.0.0.1:8000/select-role/
 #http://127.0.0.1:8000/recommend-doctor/
 #http://127.0.0.1:8000/book_appointment/
+#http://127.0.0.1:8000/faq/
 
 # use defaultdb;
 # SET SQL_SAFE_UPDATES = 0;
