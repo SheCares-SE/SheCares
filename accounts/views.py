@@ -1,29 +1,20 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.shortcuts import render, redirect , get_object_or_404
+from django.contrib.auth import login, authenticate,get_user_model
 from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm
 from .models import User, PatientProfile, DoctorProfile
-from gync.models import Appointment
 from gync.models import Doctor  # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
 from django.contrib import messages
 from django.db import connection
-from django.contrib.auth.hashers import check_password
-from django.shortcuts import render, redirect,get_object_or_404
-
 from django.contrib.auth.hashers import check_password , make_password
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db import connection
-from django.contrib.auth.decorators import login_required
-from .models import Question, Answer
-from django.contrib.auth import get_user_model
-
 from django.contrib.auth.decorators import login_required
 from .models import Question, Answer
 from django.utils.timezone import now
 
 
-
+# Aishna
 def login_view(request):
     if request.method == 'POST':
         # Get username and password from the POST data
@@ -83,7 +74,7 @@ def edit_patient_profile(request):
 
     return render(request, 'accounts/edit_patient_profile.html', {'form': form})
 
-
+#aishna
 def select_role_view(request):
     """Step 1: Ask for the role"""
     if request.method == 'POST':
@@ -142,7 +133,7 @@ def recommend_doctor_view(request):
         'selected_specialization': selected_specialization
     })
 
-
+# Aishna
 def signup_view(request, role):
     """Step 2: Show appropriate signup form based on role"""
     if role not in ['doctor', 'patient']:
@@ -258,11 +249,6 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', {'profile': profile_data})
 
 #Urvashi
-
-
-
-
-
 @login_required
 def faq_page(request):
     if request.method == "POST":
@@ -322,4 +308,72 @@ def add_answer(request, question_id):
 #             messages.error(request, "Answer cannot be empty.")
 #     return redirect("faq_page")
 
+#Aishna
+@login_required
+def patient_appointments_view(request):
+    """View for patients to see their appointments"""
+    patient_profile = request.user.accounts_patient_profile
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT a.id, a.date, a.time, a.status, d.specialization
+            FROM gync_appointment a
+            JOIN doctor_table d ON a.doctor_id = d.id
+            WHERE a.patient_id = %s;
+        """, [patient_profile.id])
+        appointments = cursor.fetchall()
+
+    return render(request, 'accounts/patient_appointments.html', {'appointments': appointments})
+
+@login_required
+def doctor_requests_view(request):
+    """View for doctors to see appointment requests"""
+
+    user_id = request.user.id  # Get the logged-in user's ID
+
+    # Fetch doctor details using raw SQL
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM gync_doctor WHERE user_id = %s", [user_id])
+        doctor = cursor.fetchone()
+
+    if not doctor:
+        return HttpResponse("Doctor profile not found", status=404)
+
+    doctor_id = doctor[0]  # Extract doctor ID from the tuple
+
+    # Fetch appointment requests
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT a.id, a.date, a.time, a.status, p.age, p.is_private, u.username, u.email
+            FROM gync_appointments a
+            JOIN accounts_patient_profile_table p ON a.patient_id = p.id
+            JOIN accounts_user u ON p.user_id = u.id
+            WHERE a.doctor_id = %s AND a.status = 'pending';
+        """, [doctor_id])
+        requests = cursor.fetchall()
+
+    return render(request, 'accounts/doctor_requests.html', {'requests': requests})
+
+@login_required
+def approve_request(request, appointment_id):
+    """View to approve"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            UPDATE gync_appointment
+            SET status = 'approved'
+            WHERE id = %s;
+        """, [appointment_id])
+        
+    return redirect('doctor_requests')
+
+@login_required
+def reject_request(request, appointment_id):
+    """View to approve"""
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            UPDATE gync_appointment
+            SET status = 'rejected'
+            WHERE id = %s;
+        """, [appointment_id])
+        
+    return redirect('doctor_requests')
 

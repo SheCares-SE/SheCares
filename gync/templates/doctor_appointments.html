@@ -1,8 +1,24 @@
 <h2>Appointment Requests</h2>
-{% for appointment in appointments %}
-    <p>{{ appointment.patient.username }} - {{ appointment.date }} at {{ appointment.time }}</p>
-    <a href="{% url 'confirm_appointment' appointment.id %}">Confirm</a>
-    <a href="{% url 'reject_appointment' appointment.id %}">Reject</a>
-{% empty %}
-    <p>No appointment requests</p>
-{% endfor %}
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Patient</th>
+        <th>Age</th>
+        <th>Email</th>
+        <th>Actions</th>
+    </tr>
+    {% for request in requests %}
+    <tr>
+        <td>{{ request.date }}</td>
+        <td>{{ request.time }}</td>
+        <td>{{ request.username }}</td>
+        <td>{{ request.age }}</td>
+        <td>{{ request.email }}</td>
+        <td>
+            <a href="{% url 'approve_request' request.id %}">Approve</a>
+            <a href="{% url 'reject_request' request.id %}">Reject</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

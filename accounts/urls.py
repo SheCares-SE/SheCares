@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from patient.views import patient_dashboard  
 from gync.views import doctor_dashboard  
 from . import views
+from .views import signup_view, patient_appointments_view, doctor_requests_view, approve_request, reject_request
 from .views import faq_page, add_question, add_answer
 
 urlpatterns = [
@@ -25,5 +26,10 @@ urlpatterns = [
     path("faq/", faq_page, name="faq_page"),
     path("faq/add_question/", add_question, name="add_question"),
     path("faq/add_answer/<int:question_id>/", add_answer, name="add_answer"),
-  
+    #Aishna
+    path('patient/appointments/', patient_appointments_view, name='patient_appointments'),
+    path('doctor/requests/', doctor_requests_view, name='doctor_requests'),
+    path('doctor/requests/approve/<int:appointment_id>/', approve_request, name='approve_request'),
+    path('doctor/requests/reject/<int:appointment_id>/', reject_request, name='reject_request'),
+
 ]

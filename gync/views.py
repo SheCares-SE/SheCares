@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from .models import Availability, Appointment
 from .forms import AvailabilityForm
 from gync.models import DoctorProfile
-from .models import Doctor  # or the correct model class
+from django.shortcuts import  get_object_or_404
+from gync.models import Appointment
 
 @login_required
 def doctor_dashboard(request):
@@ -23,41 +24,19 @@ def update_availability(request):
 
     return render(request, "gync/update_availability.html", {"form": form})
 
-# @login_required
-# def doctor_appointments(request):
-#     appointments = Appointment.objects.filter(doctor=request.user)
-#     return render(request, 'gync/doctor_appointments.html', {'appointments': appointments})
+
 
 @login_required
 def doctor_appointments(request):
-    # ✅ Get the doctor profile from the logged-in user
-    doctor = Doctor.objects.get(user=request.user)  
-
-    # ✅ Filter appointments where this doctor is assigned
-    appointments = Appointment.objects.filter(doctor=doctor)  
+    # Retrieve the DoctorProfile associated with the logged-in user
+    doctor_profile = get_object_or_404(DoctorProfile, user=request.user)
+    
+    # Filter appointments using the doctor_profile
+    appointments = Appointment.objects.filter(doctor=doctor_profile)
 
     return render(request, 'gync/doctor_appointments.html', {'appointments': appointments})
 
 
-
-@login_required
-def confirm_appointment(request, appointment_id):
-    appointment = Appointment.objects.get(id=appointment_id, doctor=request.user)
-    appointment.status = 'Confirmed'
-    appointment.save()
-    return redirect('doctor_appointments')
-
-@login_required
-def reject_appointment(request, appointment_id):
-    appointment = Appointment.objects.get(id=appointment_id, doctor=request.user)
-    appointment.status = 'Rejected'
-    appointment.save()
-    return redirect('doctor_appointments')
-
-
 def get_doctor_profile_view(request, doctor_id):
-    try:
-        doctor = DoctorProfile.objects.get(id=doctor_id)
-        return render(request, 'doctor_profile.html', {'doctor': doctor})
-    except DoctorProfile.DoesNotExist:
-        return render(request, '404.html') # Or any other error page
+    doctor_profile = get_object_or_404(DoctorProfile, id=doctor_id)
+    return render(request, 'gync/doctor_profile.html', {'doctor_profile': doctor_profile})

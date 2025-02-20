@@ -39,12 +39,13 @@ class DoctorProfile(models.Model):
     def __str__(self):
         return f"Doctor: {self.user.username} - {self.specialization}"
 
-# Appointment Model
+# Appointment Model (Aishna)
 class Appointment(models.Model):
     patient = models.ForeignKey(PatientProfile, on_delete=models.CASCADE, related_name='patient_appointments')  # Use unique related_name
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, related_name='doctor_appointments')  # Use unique related_name
     date = models.DateField(default="2025-01-01")  # Default date value (example)
     time = models.TimeField(default="09:00:00")  # Default time value (example)
+    status = models.CharField(max_length=20, default='pending')  # Status of appointment (pending/approved/rejected)
 
     class Meta:
         db_table = "gync_appointment"  # Unique table name for Appointment (make sure only one model uses this table)
