@@ -227,7 +227,7 @@ def profile_view(request):
             # Fetch patient details from accounts_patient_profile_table
             cursor.execute("""
                 SELECT age, is_private 
-                FROM accounts_patient_profile_table 
+                FROM patient_table 
                 WHERE user_id = %s
             """, [user.id])
             row = cursor.fetchone()
@@ -278,7 +278,7 @@ def faq_page(request):
                     messages.error(request, "Answer cannot be empty.")
             else:
                 messages.error(request, "Only gynecologists can answer questions.")
-        return redirect("faq_page")
+        return redirect("accounts:faq_page")
 
     questions = Question.objects.all().order_by("-created_at")
     return render(request, "accounts/faq.html", {"questions": questions})
@@ -287,12 +287,12 @@ def faq_page(request):
 def add_question(request):
     # This view can be used for a separate "Add Question" page if needed.
     # For our one-page FAQ, the form is handled in faq_page.
-    return redirect("faq_page")
+    return redirect("accounts:faq_page")
 
 @login_required
 def add_answer(request, question_id):
     # This view is now handled in faq_page via POST data.
-    return redirect("faq_page")
+    return redirect("accounts:faq_page")
 
 # @login_required
 # def add_answer(request, question_id):
