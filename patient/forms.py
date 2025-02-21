@@ -25,12 +25,39 @@ def get_doctor_choices():
         doctors = cursor.fetchall()
     return [(doctor[0], doctor[1]) for doctor in doctors]  # Returning (id, name) tuples
 
-class AppointmentForm(forms.ModelForm):
-    doctor = forms.ModelChoiceField(queryset=Doctor.objects.all())
+# class AppointmentForm(forms.ModelForm):
+#     doctor = forms.ModelChoiceField(queryset=Doctor.objects.all(), label="Select Doctor")
+#     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+#     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+from django import forms
+from .models import Appointments, Doctor
+
+from django import forms
+
+class AppointmentForm(forms.Form):
+    doctor = forms.ChoiceField(choices=[], label="Doctor", required=True)
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
 
-    class Meta:
-        model = Appointment
-        fields = ['doctor', 'date', 'time', 'status']  # Make sure these fields match the Appointment model
+    def __init__(self, *args, **kwargs):
+        doctors = kwargs.pop('doctors', [])  # Get doctors list from kwargs
+        super().__init__(*args, **kwargs)
+        self.fields['doctor'].choices = [(doc['id'], doc['username']) for doc in doctors]  # Populate dropdown
+
+
+# class AppointmentForm(forms.ModelForm):
+#     doctor = forms.ModelChoiceField(
+#         queryset=Doctor.objects.all(),
+#         widget=forms.Select(attrs={'id': 'doctor', 'class': 'form-select'})
+#     )
+#     date = forms.DateField(
+#         widget=forms.DateInput(attrs={'type': 'date', 'id': 'id_date'})
+#     )
+#     time = forms.TimeField(
+#         widget=forms.TimeInput(attrs={'type': 'time', 'id': 'id_time'})
+#     )
+    
+#     class Meta:
+#         model = Appointment
+#         fields = ['doctor', 'date', 'time']
 

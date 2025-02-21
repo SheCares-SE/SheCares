@@ -10,7 +10,7 @@ class BlogForm(forms.ModelForm):
         fields = ['title', 'content']
 
 #Aishna
-class Appointment(forms.ModelForm):
+class Appointment(forms.Form):
     doctor = forms.ModelChoiceField(queryset=GyncProfile.objects.all(), required=True, empty_label="Select Doctor")
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))

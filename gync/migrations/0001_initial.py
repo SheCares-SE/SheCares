@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 ('registration_no', models.CharField(default='Unknown', max_length=255)),
                 ('specialization', models.CharField(default='General', max_length=255)),
                 ('profile_picture', models.ImageField(blank=True, null=True, upload_to='doctor_pics/')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='doctor_profile_extra', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='doctor_table_extra', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(

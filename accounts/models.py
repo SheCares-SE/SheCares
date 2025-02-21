@@ -28,15 +28,17 @@ class PatientProfile(models.Model):
 
 # Doctor Profile Model
 class DoctorProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_table', default=None)
     registration_number = models.CharField(max_length=20, default="Not Registered")
     specialization = models.CharField(max_length=100, default="General")
+    account_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_account', to_field='id',  null=True, blank=True)
 
     class Meta:
         db_table = "doctor_table"
 
     def __str__(self):
         return f"Dr. {self.user.username} - {self.specialization}"
+
 
 # # Appointment Model (Aishna)
 # class Appointment(models.Model):

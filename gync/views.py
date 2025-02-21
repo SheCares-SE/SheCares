@@ -11,10 +11,10 @@ from django.http import HttpResponse
 def doctor_dashboard(request):
     return render(request, 'doctor_dashboard.html')
 
-def get_doctor_profile_view(request, doctor_id):
+def get_doctor_table_view(request, doctor_id):
     try:
         doctor = DoctorProfile.objects.get(id=doctor_id)
-        return render(request, 'doctor_profile.html', {'doctor': doctor})
+        return render(request, 'doctor_table.html', {'doctor': doctor})
     except DoctorProfile.DoesNotExist:
         return render(request, '404.html')  # Or any other error page
 
@@ -49,25 +49,29 @@ def doctor_appointments_view(request):
     
     # Retrieve the doctor profile ID using raw SQL
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id FROM gync_doctorprofile WHERE user_id = %s", [user_id])
-        doctor_profile = cursor.fetchone()
-    
-    # If no doctor profile exists, return an error page
-    if not doctor_profile:
-        return render(request, 'doctor_dashboard.html')  # Or any other error page
+        cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
+        doctor_table = cursor.fetchone()
 
-    doctor_id = doctor_profile[0]
-    
+    # If no doctor profile exists, you may want to show an error message or redirect
+    # if not doctor_table:
+    #     # Redirect to a different page, or show an error message
+    #     return render(request, 'error_page.html', {'message': 'Doctor profile not found'})
+
+    # Assuming `doctor_table` exists, fetch the doctor ID
+    doctor_id = doctor_table[0]  # Accessing the first element (ID) from the tuple
+
     # Retrieve pending appointments for the doctor
     with connection.cursor() as cursor:
+        # Fetch the doctor details (ID should already be in doctor_table)
         cursor.execute("""
-            SELECT a.id, a.date, a.time, a.status, p.username
+            SELECT a.id, a.date, a.time, a.status, p.username 
             FROM gync_appointment a
-            JOIN auth_user p ON a.patient_id = p.id
+            JOIN accounts_user p ON a.patient_id = p.id 
             WHERE a.doctor_id = %s AND a.status = 'Pending'
         """, [doctor_id])
+
         appointments = cursor.fetchall()
-    
+
     # Render the appointments in the template
     return render(request, 'gync/doctor_appointments.html', {'appointments': appointments})
 

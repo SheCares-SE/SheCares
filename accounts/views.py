@@ -122,10 +122,10 @@ def recommend_doctor_view(request):
         doctors = []
         if selected_specialization:
             cursor.execute("""
-                SELECT accounts_user.username, doctor_profile.registration_no, doctor_profile.specialization
-                FROM doctor_profile
-                JOIN accounts_user ON doctor_profile.user_id = accounts_user.id
-                WHERE doctor_profile.specialization = LOWER(%s)
+                SELECT accounts_user.username, doctor_table.registration_number, doctor_table.specialization
+                FROM doctor_table
+                JOIN accounts_user ON doctor_table.user_id = accounts_user.id
+                WHERE doctor_table.specialization = LOWER(%s)
             """, [selected_specialization])
             
             doctors = cursor.fetchall()  # Returns list of tuples (username, registration_number, specialization)
@@ -189,7 +189,7 @@ def signup_view(request, role):
                 # Insert doctor profile into the doctor_table
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO doctor_profile (user_id, registration_number, specialization)
+                        INSERT INTO doctor_table (user_id, registration_number, specialization)
                         VALUES (%s, %s, %s)
                     """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization')])
             else:

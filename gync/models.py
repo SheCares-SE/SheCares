@@ -11,7 +11,7 @@ class Symptom(models.Model):
         return self.name
 
 # class Doctor(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile")
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_table")
 #     registration_number = models.CharField(max_length=255, default="Unknown")  # Default value added
 #     specialization = models.CharField(max_length=255, default="General")  # Default value added
 
@@ -19,7 +19,7 @@ class Symptom(models.Model):
 #         return f"{self.user.username} - {self.specialization}"
 
 class DoctorProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_profile_extra")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_table_extra")
     registration_no = models.CharField(max_length=255, default="Unknown")  # Default value added
     specialization = models.CharField(max_length=255, default="General")  # Default value added
     profile_picture = models.ImageField(upload_to="doctor_pics/", blank=True, null=True)

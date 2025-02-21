@@ -62,18 +62,18 @@
             {% csrf_token %}
             <div class="mb-3">
                 <label for="doctor">Doctor</label>
-                <select name="doctor" class="form-select" required>
+                <select name="doctor" id="doctor" class="form-select" required>
                     {% for doctor in doctors %}
                         <option value="{{ doctor.id }}">{{ doctor.username }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="mb-3">
-                <label for="date">Date</label>
+                <label for="id_date">Date</label>
                 {{ form.date }}
             </div>
             <div class="mb-3">
-                <label for="time">Time</label>
+                <label for="id_time">Time</label>
                 {{ form.time }}
             </div>
             <button type="submit" class="btn btn-primary">Book Appointment</button>
@@ -81,3 +81,4 @@
     </div>
 </body>
 </html>
+
