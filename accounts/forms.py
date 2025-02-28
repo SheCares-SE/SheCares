@@ -13,14 +13,14 @@ class DoctorSignupForm(UserCreationForm):
    
     registration_number = forms.CharField(max_length=50)
     specialization = forms.CharField(max_length=100)  # Added Specialization
-
+    age = forms.IntegerField(required=True)
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2','registration_number', 'specialization']
+        fields = ['username', 'email', 'password1', 'password2','registration_number', 'specialization','age']
 
 class PatientSignupForm(UserCreationForm):
-    age = forms.IntegerField()
+    age = forms.IntegerField(required=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2','age']

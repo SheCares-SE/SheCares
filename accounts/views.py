@@ -215,7 +215,7 @@ def signup_view(request, role):
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
 
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
-
+#Aesha
 @login_required
 def profile_view(request):
     """View to render the profile page based on user role using SQL queries."""
@@ -226,15 +226,16 @@ def profile_view(request):
         if user.role == 'patient':
             # Fetch patient details from accounts_patient_profile_table
             cursor.execute("""
-                SELECT age, is_private 
-                FROM patient_table 
-                WHERE user_id = %s
+                SELECT username, age, role 
+                FROM accounts_user
+                WHERE id = %s
             """, [user.id])
             row = cursor.fetchone()
             if row:
                 profile_data = {
-                    "age": row[0],
-                    "is_private": row[1],
+                    "username": row[0],
+                    "age": row[1],
+                    "role": row[2],
                 }
         elif user.role == 'doctor':
             # Fetch doctor details from doctor_table

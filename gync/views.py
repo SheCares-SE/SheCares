@@ -9,7 +9,7 @@ from django.http import HttpResponse
 
 @login_required
 def doctor_dashboard(request):
-    return render(request, 'doctor_dashboard.html')
+    return render(request, 'gync/doctor_dashboard.html')
 
 def get_doctor_table_view(request, doctor_id):
     try:
