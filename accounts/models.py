@@ -21,7 +21,7 @@ class PatientProfile(models.Model):
     is_private = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "accounts_user"
+        db_table = "patient_table"
 
     def __str__(self):
         return f"{self.user.username} - {self.age}"
