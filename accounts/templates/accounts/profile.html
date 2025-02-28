@@ -1,25 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ request.user.username }}'s Profile</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Your Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>{{ request.user.username }}'s Profile</h1>
-    
+<body class="bg-gray-100 p-6 flex items-center justify-center min-h-screen">
+  <div class="max-w-lg w-full bg-white p-6 rounded-lg shadow-md">
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-blue-700">Your Profile</h1>
+      <p class="text-gray-500">Role: {{ request.user.role|title }}</p>
+      <hr class="my-4">
+    </div>
+
     {% if profile %}
-        {% if request.user.role == 'patient' %}
-            <h2>Patient Profile</h2>
-            <p>Age: {{ profile.age }}</p>
-            <p>Profile Privacy: {% if profile.is_private %}Private{% else %}Public{% endif %}</p>
-        {% elif request.user.role == 'doctor' %}
-            <h2>Doctor Profile</h2>
-            <p>Registration Number: {{ profile.registration_number }}</p>
-            <p>Specialization: {{ profile.specialization }}</p>
-        {% endif %}
+      {% if request.user.role == 'patient' %}
+        <div class="p-4 bg-blue-50 rounded-lg shadow-md">
+          <h2 class="text-2xl font-semibold text-blue-600"> Details</h2>
+          <p class="text-lg text-gray-700"><strong>Username:</strong> {{ profile.username }}</p>
+          <p class="text-lg text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
+        </div>
+      {% elif request.user.role == 'doctor' %}
+        <div class="p-4 bg-green-50 rounded-lg shadow-md">
+          <h2 class="text-2xl font-semibold text-green-600">Doctor Details</h2>
+          <p class="text-lg text-gray-700"><strong>Registration Number:</strong> {{ profile.registration_number }}</p>
+          <p class="text-lg text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
+        </div>
+      {% endif %}
     {% else %}
-        <p>No profile data available.</p>
+      <p class="text-center text-gray-500">No profile data available.</p>
     {% endif %}
+
+    {% comment %} <div class="text-center mt-6">
+      <a href="{% url 'accounts:edit_profile' %}" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition">
+        Edit Profile
+      </a>
+    </div> {% endcomment %}
+  </div>
 </body>
 </html>
