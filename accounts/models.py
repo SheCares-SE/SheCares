@@ -13,7 +13,7 @@ class User(AbstractUser):
     age = models.IntegerField(null=True, blank=True)  # Add age field
     def __str__(self):
         return self.username
-#Aesha
+#Aesha1
 # Patient Profile Model
 class PatientProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='patient_profile')
