@@ -22,6 +22,9 @@ def get_doctor_table_view(request, doctor_id):
 @login_required
 def blog_list(request):
     blogs = Blog.objects.filter(author=request.user)
+    show_all = request.GET.get("show_all", "false") == "true"
+    blogs = Blog.objects.all() if show_all else blogs
+    return render(request, "gync/blog_list.html", {"blogs": blogs, "show_all": show_all})
 
 
 @login_required
