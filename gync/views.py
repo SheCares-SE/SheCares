@@ -21,7 +21,7 @@ def get_doctor_table_view(request, doctor_id):
 @login_required
 def blog_list(request):
     blogs = Blog.objects.filter(author=request.user)
-    return render(request, 'gync/blog_list.html', {'blogs': blogs})
+
 
 @login_required
 def blog_create(request):
