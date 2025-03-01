@@ -15,6 +15,7 @@ from django.utils.timezone import now
 from django.utils import timezone
 from django.http import HttpResponse  # Add this import
 from django.urls import reverse
+from django.http import JsonResponse
 
 # Aishna
 def login_view(request):
@@ -257,7 +258,6 @@ def profile_view(request):
 @login_required
 def faq_page(request):
     if request.method == "POST":
-        # Determine if a question or answer is being submitted
         if 'question_text' in request.POST:
             question_text = request.POST.get("question_text")
             if question_text:
@@ -270,7 +270,6 @@ def faq_page(request):
             answer_text = request.POST.get("answer_text")
             question = get_object_or_404(Question, qus_id=question_id)
             
-            # Ensure only gynecologists can answer:
             if request.user.role == "doctor":
                 if answer_text:
                     Answer.objects.create(user=request.user, qus=question, text=answer_text)
@@ -278,21 +277,32 @@ def faq_page(request):
                 else:
                     messages.error(request, "Answer cannot be empty.")
             else:
-                messages.error(request, "Only gynecologists can answer questions.")
+                messages.error(request, "Only doctors can answer questions.")
         return redirect("accounts:faq_page")
 
-    questions = Question.objects.all().order_by("-created_at")
+    questions = Question.objects.all().order_by("-upvote_count")
     return render(request, "accounts/faq.html", {"questions": questions})
 
 @login_required
+def upvote_question(request):
+    question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
+    question.upvote_count += 1
+    question.save()
+    return JsonResponse({"upvote_count": question.upvote_count})
+
+@login_required
+def upvote_answer(request):
+    answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
+    answer.upvote_count += 1
+    answer.save()
+    return JsonResponse({"upvote_count": answer.upvote_count})
+
+@login_required
 def add_question(request):
-    # This view can be used for a separate "Add Question" page if needed.
-    # For our one-page FAQ, the form is handled in faq_page.
     return redirect("accounts:faq_page")
 
 @login_required
 def add_answer(request, question_id):
-    # This view is now handled in faq_page via POST data.
     return redirect("accounts:faq_page")
 
 # @login_required

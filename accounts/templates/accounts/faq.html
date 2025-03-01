@@ -6,6 +6,8 @@
   <title>FAQ - SheCares</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body class="bg-gray-100 p-6">
   <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -24,15 +26,33 @@
     <!-- Display Questions and Their Answers -->
     {% for question in questions %}
       <div class="p-4 border border-gray-300 rounded-lg shadow-md bg-gray-50 mb-4">
+        <!-- Clickable question to toggle answers -->
         <button onclick="toggleAnswers('{{ question.qus_id }}')" class="w-full text-left">
           <p class="text-lg font-semibold text-gray-800">{{ question.text }}</p>
-          <p class="text-gray-600 text-sm">Asked by {{ question.user.username }} on {{ question.created_at|date:"M d, Y" }}</p>
+          <p class="text-gray-600 text-sm">
+            Asked by {{ question.user.username }} on {{ question.created_at|date:"M d, Y" }}
+          </p>
         </button>
+        
+        <!-- Upvote button for question -->
+        <div class="flex items-center mt-2">
+          <button onclick="upvoteQuestion('{{ question.qus_id }}')" class="bg-gray-200 px-3 py-1 rounded-md hover:bg-gray-300">
+            👍 Like <span id="qus-upvote-{{ question.qus_id }}">{{ question.upvote_count }}</span>
+          </button>
+        </div>
+        
+        <!-- Answers Section (Initially Hidden) -->
         <div id="answers-{{ question.qus_id }}" class="hidden mt-3 pl-4 border-l-4 border-gray-400 space-y-2">
-          {% for answer in question.answer_set.all %}
+          {% for answer in question.answers.all %}
             <div class="p-3 bg-gray-100 rounded-md">
               <p class="text-gray-800">{{ answer.text }}</p>
-              <p class="text-xs text-gray-500">Answered by {{ answer.user.username }} on {{ answer.created_at|date:"M d, Y" }}</p>
+              <p class="text-xs text-gray-500">
+                Answered by {{ answer.user.username }} on {{ answer.created_at|date:"M d, Y" }}
+              </p>
+              <!-- Upvote button for answer -->
+              <button onclick="upvoteAnswer('{{ answer.ans_id }}')" class="bg-gray-200 px-3 py-1 rounded-md hover:bg-gray-300">
+                👍 Like <span id="ans-upvote-{{ answer.ans_id }}">{{ answer.upvote_count }}</span>
+              </button>
             </div>
           {% empty %}
             <p class="text-gray-500 text-sm">No answers yet.</p>
@@ -58,14 +78,30 @@
       <p class="text-center text-gray-500">No questions available. Be the first to ask!</p>
     {% endfor %}
   </div>
-
-  <!-- JavaScript for toggling forms -->
+  
+  <!-- JavaScript for toggling forms and upvotes -->
   <script>
     function toggleAnswers(questionId) {
       document.getElementById('answers-' + questionId).classList.toggle('hidden');
     }
     function toggleAnswerForm(questionId) {
       document.getElementById('answer-form-' + questionId).classList.toggle('hidden');
+    }
+    function upvoteQuestion(questionId) {
+      $.post("{% url 'accounts:upvote_question' %}", 
+             { qus_id: questionId, csrfmiddlewaretoken: '{{ csrf_token }}' },
+             function(data) {
+                $("#qus-upvote-" + questionId).text(data.upvote_count);
+             }
+      );
+    }
+    function upvoteAnswer(answerId) {
+      $.post("{% url 'accounts:upvote_answer' %}", 
+             { ans_id: answerId, csrfmiddlewaretoken: '{{ csrf_token }}' },
+             function(data) {
+                $("#ans-upvote-" + answerId).text(data.upvote_count);
+             }
+      );
     }
   </script>
 </body>
