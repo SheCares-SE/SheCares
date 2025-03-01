@@ -54,8 +54,8 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def doctor_appointments_view(request):
-    # user_id = request.user.id
-    user_id=10
+    user_id = request.user.id
+
 
     # Fetch doctor ID from doctor_table
     with connection.cursor() as cursor:
