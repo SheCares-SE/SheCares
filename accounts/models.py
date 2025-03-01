@@ -11,6 +11,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="patient")
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)    
     age = models.IntegerField(null=True, blank=True)  # Add age field
+    
     def __str__(self):
         return self.username
 
@@ -32,6 +33,7 @@ class DoctorProfile(models.Model):
     registration_number = models.CharField(max_length=20, default="Not Registered")
     specialization = models.CharField(max_length=100, default="General")
     account_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='doctor_account', to_field='id',  null=True, blank=True)
+    city = models.CharField(max_length=255, default="Default") 
 
     class Meta:
         db_table = "doctor_table"
