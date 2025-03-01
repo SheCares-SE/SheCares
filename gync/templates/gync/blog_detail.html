@@ -1,3 +1,17 @@
-<h2>{{ blog.title }}</h2>
-<p>{{ blog.content }}</p>
-<p><i>Published by {{ blog.author.username }} on {{ blog.created_at }}</i></p>
+<html><head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<div class="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
+    <h2 class="text-3xl font-bold text-black mb-4">{{ blog.title }}</h2>
+
+    <div class="bg-green-100 bg-opacity-40 p-4 rounded-lg shadow-inner">
+        <p class="text-lg text-gray-800 leading-relaxed">{{ blog.content }}</p>
+    </div>
+
+    <p class="text-sm text-gray-600 mt-4 italic">
+        Published by <span class="font-semibold">{{ blog.author.username }}</span> 
+        on {{ blog.created_at }}
+    </p>
+</div>
+
+</html>

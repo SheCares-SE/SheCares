@@ -20,7 +20,7 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'gync:doctor_appointments' %}">Appointments</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'accounts:recommend_doctor' %}">Recommended-Doctor</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
-                    {% comment %} <li class="nav-item"><a class="nav-link" href="/blogs/">Blog</a></li> {% endcomment %}
+                    <li class="nav-item"><a class="nav-link" href="/blogs/">Blog</a></li> 
                     <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li> 
                     <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
                 </ul>
@@ -41,6 +41,23 @@
         </ul>
     </section>
 
+
+    <section class="container mt-4">
+        <h3>My Blogs</h3>
+        <ul>
+            {% for blog in blogs %}
+                <li>
+                    <a href="{% url 'gync:blog_detail' blog.id %}" class="text-success">
+                        {{ blog.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>No blogs yet.</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'gync:blog_list' %}" class="btn btn-info mt-2">Manage Blogs</a>
+    </section>
+    
     <section class="container mt-4">
         <h3>Answer FAQs</h3>
         {% for faq in unanswered_faqs %}

@@ -4,6 +4,7 @@ from django.db import connection
 from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
+from django.http import JsonResponse
 
 from django.http import HttpResponse
 
@@ -21,7 +22,10 @@ def get_doctor_table_view(request, doctor_id):
 @login_required
 def blog_list(request):
     blogs = Blog.objects.filter(author=request.user)
-    return render(request, 'gync/blog_list.html', {'blogs': blogs})
+    show_all = request.GET.get("show_all", "false") == "true"
+    blogs = Blog.objects.all() if show_all else blogs
+    return render(request, "gync/blog_list.html", {"blogs": blogs, "show_all": show_all})
+
 
 @login_required
 def blog_create(request):
@@ -42,10 +46,17 @@ def blog_detail(request, blog_id):
     return render(request, 'gync/blog_detail.html', {'blog': blog})
 
 #aishna
+
+
+from django.shortcuts import render, redirect
+from django.db import connection
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def doctor_appointments_view(request):
     user_id = request.user.id
-    print(user_id)
+
+
     # Fetch doctor ID from doctor_table
     with connection.cursor() as cursor:
         cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
@@ -53,8 +64,9 @@ def doctor_appointments_view(request):
 
     # if not doctor_table:
     #     return render(request, 'error_page.html', {'message': 'Doctor profile not found'})
-    #print("doctor_table:", doctor_table)  # Debugging
-    doctor_id = doctor_table[0]  # Extract doctor ID
+
+    doctor_id = doctor_table[0]
+    print(doctor_id)
 
     # Fetch Pending Appointments
     with connection.cursor() as cursor:
@@ -67,6 +79,8 @@ def doctor_appointments_view(request):
         """, [doctor_id])
         pending_appointments = cursor.fetchall()
 
+    print("Pending Appointments: ", pending_appointments)
+
     # Fetch Confirmed Appointments
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -78,6 +92,8 @@ def doctor_appointments_view(request):
         """, [doctor_id])
         confirmed_appointments = cursor.fetchall()
 
+    print("Confirmed Appointments: ", confirmed_appointments)
+
     return render(request, 'gync/doctor_appointments.html', {
         'pending_appointments': pending_appointments,
         'confirmed_appointments': confirmed_appointments
@@ -87,20 +103,22 @@ def doctor_appointments_view(request):
 def confirm_appointment(request, appointment_id):
     with connection.cursor() as cursor:
         cursor.execute("""
-            UPDATE gync_appointment
-            SET status = 'Confirmed'
+            UPDATE gync_appointment 
+            SET status = 'Confirmed' 
             WHERE id = %s
         """, [appointment_id])
         connection.commit()
+
     return redirect('gync:doctor_appointments')
 
 @login_required
 def reject_appointment(request, appointment_id):
     with connection.cursor() as cursor:
         cursor.execute("""
-            UPDATE gync_appointment
-            SET status = 'Rejected'
+            UPDATE gync_appointment 
+            SET status = 'Rejected' 
             WHERE id = %s
         """, [appointment_id])
         connection.commit()
+
     return redirect('gync:doctor_appointments')

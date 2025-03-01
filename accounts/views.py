@@ -405,76 +405,133 @@ def profile_view(request):
                                                      'form': form})
 
 #Urvashi
+# @login_required
+# def faq_page(request):
+#     if request.method == "POST":
+#         if 'question_text' in request.POST:
+#             question_text = request.POST.get("question_text")
+#             if question_text:
+#                 Question.objects.create(user=request.user, text=question_text)
+#                 messages.success(request, "Question submitted successfully!")
+#             else:
+#                 messages.error(request, "Question cannot be empty.")
+#         elif 'answer_text' in request.POST:
+#             question_id = request.POST.get("qus_id")
+#             answer_text = request.POST.get("answer_text")
+#             question = get_object_or_404(Question, qus_id=question_id)
+            
+#             if request.user.role == "doctor":
+#                 if answer_text:
+#                     Answer.objects.create(user=request.user, qus=question, text=answer_text)
+#                     messages.success(request, "Answer submitted successfully!")
+#                 else:
+#                     messages.error(request, "Answer cannot be empty.")
+#             else:
+#                 messages.error(request, "Only doctors can answer questions.")
+#         return redirect("accounts:faq_page")
+
+#     questions = Question.objects.all().order_by("-upvote_count")
+#     return render(request, "accounts/faq.html", {"questions": questions})
+
+# @login_required
+# def upvote_question(request):
+#     question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
+#     question.upvote_count += 1
+#     question.save()
+#     return JsonResponse({"upvote_count": question.upvote_count})
+
+# @login_required
+# def upvote_answer(request):
+#     answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
+#     answer.upvote_count += 1
+#     answer.save()
+#     return JsonResponse({"upvote_count": answer.upvote_count})
+
+# @login_required
+# def add_question(request):
+#     return redirect("accounts:faq_page")
+
+# @login_required
+# def add_answer(request, question_id):
+#     return redirect("accounts:faq_page")
+
+
 @login_required
 def faq_page(request):
     if request.method == "POST":
+        cursor = connection.cursor()
+        # If a new question is submitted:
         if 'question_text' in request.POST:
             question_text = request.POST.get("question_text")
             if question_text:
-                Question.objects.create(user=request.user, text=question_text)
+                # Insert the question using raw SQL
+                cursor.execute("""
+                    INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
+                    VALUES (%s, %s, NOW(), 0)
+                """, [request.user.id, question_text])
                 messages.success(request, "Question submitted successfully!")
             else:
                 messages.error(request, "Question cannot be empty.")
+        # If an answer is submitted:
         elif 'answer_text' in request.POST:
             question_id = request.POST.get("qus_id")
             answer_text = request.POST.get("answer_text")
-            question = get_object_or_404(Question, qus_id=question_id)
-            
-            if request.user.role == "doctor":
-                if answer_text:
-                    Answer.objects.create(user=request.user, qus=question, text=answer_text)
-                    messages.success(request, "Answer submitted successfully!")
-                else:
-                    messages.error(request, "Answer cannot be empty.")
+            # Verify that the question exists
+            cursor.execute("SELECT qus_id FROM accounts_question WHERE qus_id = %s", [question_id])
+            if cursor.fetchone() is None:
+                messages.error(request, "Question not found.")
             else:
-                messages.error(request, "Only doctors can answer questions.")
+                if request.user.role == "doctor":
+                    if answer_text:
+                        cursor.execute("""
+                            INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
+                            VALUES (%s, %s, %s, NOW(), 0)
+                        """, [question_id, request.user.id, answer_text])
+                        messages.success(request, "Answer submitted successfully!")
+                    else:
+                        messages.error(request, "Answer cannot be empty.")
+                else:
+                    messages.error(request, "Only doctors can answer questions.")
         return redirect("accounts:faq_page")
-
-    questions = Question.objects.all().order_by("-upvote_count")
+    
+    # For GET requests, fetch questions with a raw SQL query.
+    # Using the model's raw() method returns a RawQuerySet that you can iterate in the template.
+    questions = Question.objects.raw("""
+        SELECT * FROM accounts_question
+        ORDER BY upvote_count DESC, created_at DESC
+    """)
     return render(request, "accounts/faq.html", {"questions": questions})
 
 @login_required
 def upvote_question(request):
-    question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
-    question.upvote_count += 1
-    question.save()
-    return JsonResponse({"upvote_count": question.upvote_count})
+    cursor = connection.cursor()
+    qus_id = request.POST.get("qus_id")
+    cursor.execute("""
+        UPDATE accounts_question SET upvote_count = upvote_count + 1
+        WHERE qus_id = %s
+    """, [qus_id])
+    cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
+    new_count = cursor.fetchone()[0]
+    return JsonResponse({"upvote_count": new_count})
 
 @login_required
 def upvote_answer(request):
-    answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
-    answer.upvote_count += 1
-    answer.save()
-    return JsonResponse({"upvote_count": answer.upvote_count})
+    cursor = connection.cursor()
+    ans_id = request.POST.get("ans_id")
+    cursor.execute("""
+        UPDATE accounts_answer SET upvote_count = upvote_count + 1
+        WHERE ans_id = %s
+    """, [ans_id])
+    cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
+    new_count = cursor.fetchone()[0]
+    return JsonResponse({"upvote_count": new_count})
 
 @login_required
 def add_question(request):
+    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
 
 @login_required
 def add_answer(request, question_id):
+    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
-
-# @login_required
-# def add_answer(request, question_id):
-#     question = get_object_or_404(Question, qus_id=question_id)
-    
-#     # Check that the user has the doctor role (assuming doctor role is stored as "doctor")
-#     if request.user.role != "doctor":
-#         messages.error(request, "Only doctors can answer questions.")
-#         return redirect("faq_page")
-    
-#     if request.method == "POST":
-#         answer_text = request.POST.get("answer_text")
-#         if answer_text:
-#             Answer.objects.create(user=request.user, qus=question, text=answer_text)
-#             messages.success(request, "Answer submitted successfully!")
-#         else:
-#             messages.error(request, "Answer cannot be empty.")
-#     return redirect("faq_page")
-
-
-
-
-
-

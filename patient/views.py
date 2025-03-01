@@ -5,6 +5,7 @@ from django.db import connection
 from gync.models import DoctorProfile, Appointment
 from .forms import AppointmentForm
 import logging
+from django.http import JsonResponse
 from .models import Doctor
 from datetime import datetime , timedelta # ✅ Add this line
 
