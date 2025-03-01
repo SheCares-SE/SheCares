@@ -16,6 +16,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_dashboard' %}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>

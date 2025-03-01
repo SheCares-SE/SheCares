@@ -24,3 +24,9 @@ class PatientSignupForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2','age']
+
+#Aesha
+class ProfilePictureForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['profile_picture']

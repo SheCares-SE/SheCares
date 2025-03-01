@@ -145,3 +145,5 @@ AUTH_USER_MODEL = 'accounts.User'  # Change from 'sheCares.User' to 'accounts.Us
   # Ensure this matches your app name
 # In settings.py
 LOGIN_URL = 'login/'  # Change 'login' to the name of your login URL
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

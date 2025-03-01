@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import login, authenticate,get_user_model
-from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm
+from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm, ProfilePictureForm
 from .models import User, PatientProfile, DoctorProfile
 from gync.models import DoctorProfile # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
@@ -15,6 +15,28 @@ from django.utils.timezone import now
 from django.utils import timezone
 from django.http import HttpResponse  # Add this import
 from django.urls import reverse
+from django.http import JsonResponse
+
+#Aesha
+@login_required
+def upload_profile_picture(request):
+    if request.method == 'POST':
+        form = ProfilePictureForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:profile_view')  # Redirect to profile after upload
+
+    return redirect('accounts:profile_view')
+
+
+@login_required
+def remove_profile_picture(request):
+    user = request.user
+    if user.profile_picture:
+        user.profile_picture.delete()
+        user.profile_picture = None
+        user.save()
+    return redirect('accounts:profile_view')
 
 # Aishna
 def login_view(request):
@@ -226,13 +248,14 @@ def profile_view(request):
         if user.role == 'patient':
             # Fetch patient details from accounts_patient_profile_table
             cursor.execute("""
-                SELECT username, age, role 
+                SELECT username, age, role, profile_picture 
                 FROM accounts_user
                 WHERE id = %s
             """, [user.id])
             row = cursor.fetchone()
             if row:
                 profile_data = {
+                    "profile_picture": row[3] if row[3] else None,
                     "username": row[0],
                     "age": row[1],
                     "role": row[2],
@@ -240,77 +263,152 @@ def profile_view(request):
         elif user.role == 'doctor':
             # Fetch doctor details from doctor_table
             cursor.execute("""
-                SELECT registration_number, specialization 
-                FROM doctor_table 
-                WHERE user_id = %s
+                SELECT d.registration_number, d.specialization, u.username, u.profile_picture
+                FROM doctor_table d
+                INNER JOIN accounts_user u ON d.user_id = u.id
+                WHERE d.user_id = %s
             """, [user.id])
             row = cursor.fetchone()
             if row:
                 profile_data = {
+                    "profile_picture":row[2] if row[2] else None,
+                    "username":row[2],
                     "registration_number": row[0],
                     "specialization": row[1],
                 }
+    form = ProfilePictureForm()
 
-    return render(request, 'accounts/profile.html', {'profile': profile_data})
+    return render(request, 'accounts/profile.html', {'profile': profile_data,
+                                                     'form': form})
 
 #Urvashi
+# @login_required
+# def faq_page(request):
+#     if request.method == "POST":
+#         if 'question_text' in request.POST:
+#             question_text = request.POST.get("question_text")
+#             if question_text:
+#                 Question.objects.create(user=request.user, text=question_text)
+#                 messages.success(request, "Question submitted successfully!")
+#             else:
+#                 messages.error(request, "Question cannot be empty.")
+#         elif 'answer_text' in request.POST:
+#             question_id = request.POST.get("qus_id")
+#             answer_text = request.POST.get("answer_text")
+#             question = get_object_or_404(Question, qus_id=question_id)
+            
+#             if request.user.role == "doctor":
+#                 if answer_text:
+#                     Answer.objects.create(user=request.user, qus=question, text=answer_text)
+#                     messages.success(request, "Answer submitted successfully!")
+#                 else:
+#                     messages.error(request, "Answer cannot be empty.")
+#             else:
+#                 messages.error(request, "Only doctors can answer questions.")
+#         return redirect("accounts:faq_page")
+
+#     questions = Question.objects.all().order_by("-upvote_count")
+#     return render(request, "accounts/faq.html", {"questions": questions})
+
+# @login_required
+# def upvote_question(request):
+#     question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
+#     question.upvote_count += 1
+#     question.save()
+#     return JsonResponse({"upvote_count": question.upvote_count})
+
+# @login_required
+# def upvote_answer(request):
+#     answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
+#     answer.upvote_count += 1
+#     answer.save()
+#     return JsonResponse({"upvote_count": answer.upvote_count})
+
+# @login_required
+# def add_question(request):
+#     return redirect("accounts:faq_page")
+
+# @login_required
+# def add_answer(request, question_id):
+#     return redirect("accounts:faq_page")
+
+
 @login_required
 def faq_page(request):
     if request.method == "POST":
-        # Determine if a question or answer is being submitted
+        cursor = connection.cursor()
+        # If a new question is submitted:
         if 'question_text' in request.POST:
             question_text = request.POST.get("question_text")
             if question_text:
-                Question.objects.create(user=request.user, text=question_text)
+                # Insert the question using raw SQL
+                cursor.execute("""
+                    INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
+                    VALUES (%s, %s, NOW(), 0)
+                """, [request.user.id, question_text])
                 messages.success(request, "Question submitted successfully!")
             else:
                 messages.error(request, "Question cannot be empty.")
+        # If an answer is submitted:
         elif 'answer_text' in request.POST:
             question_id = request.POST.get("qus_id")
             answer_text = request.POST.get("answer_text")
-            question = get_object_or_404(Question, qus_id=question_id)
-            
-            # Ensure only gynecologists can answer:
-            if request.user.role == "doctor":
-                if answer_text:
-                    Answer.objects.create(user=request.user, qus=question, text=answer_text)
-                    messages.success(request, "Answer submitted successfully!")
-                else:
-                    messages.error(request, "Answer cannot be empty.")
+            # Verify that the question exists
+            cursor.execute("SELECT qus_id FROM accounts_question WHERE qus_id = %s", [question_id])
+            if cursor.fetchone() is None:
+                messages.error(request, "Question not found.")
             else:
-                messages.error(request, "Only gynecologists can answer questions.")
+                if request.user.role == "doctor":
+                    if answer_text:
+                        cursor.execute("""
+                            INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
+                            VALUES (%s, %s, %s, NOW(), 0)
+                        """, [question_id, request.user.id, answer_text])
+                        messages.success(request, "Answer submitted successfully!")
+                    else:
+                        messages.error(request, "Answer cannot be empty.")
+                else:
+                    messages.error(request, "Only doctors can answer questions.")
         return redirect("accounts:faq_page")
-
-    questions = Question.objects.all().order_by("-created_at")
+    
+    # For GET requests, fetch questions with a raw SQL query.
+    # Using the model's raw() method returns a RawQuerySet that you can iterate in the template.
+    questions = Question.objects.raw("""
+        SELECT * FROM accounts_question
+        ORDER BY upvote_count DESC, created_at DESC
+    """)
     return render(request, "accounts/faq.html", {"questions": questions})
 
 @login_required
+def upvote_question(request):
+    cursor = connection.cursor()
+    qus_id = request.POST.get("qus_id")
+    cursor.execute("""
+        UPDATE accounts_question SET upvote_count = upvote_count + 1
+        WHERE qus_id = %s
+    """, [qus_id])
+    cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
+    new_count = cursor.fetchone()[0]
+    return JsonResponse({"upvote_count": new_count})
+
+@login_required
+def upvote_answer(request):
+    cursor = connection.cursor()
+    ans_id = request.POST.get("ans_id")
+    cursor.execute("""
+        UPDATE accounts_answer SET upvote_count = upvote_count + 1
+        WHERE ans_id = %s
+    """, [ans_id])
+    cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
+    new_count = cursor.fetchone()[0]
+    return JsonResponse({"upvote_count": new_count})
+
+@login_required
 def add_question(request):
-    # This view can be used for a separate "Add Question" page if needed.
-    # For our one-page FAQ, the form is handled in faq_page.
+    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
 
 @login_required
 def add_answer(request, question_id):
-    # This view is now handled in faq_page via POST data.
+    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
-
-# @login_required
-# def add_answer(request, question_id):
-#     question = get_object_or_404(Question, qus_id=question_id)
-    
-#     # Check that the user has the doctor role (assuming doctor role is stored as "doctor")
-#     if request.user.role != "doctor":
-#         messages.error(request, "Only doctors can answer questions.")
-#         return redirect("faq_page")
-    
-#     if request.method == "POST":
-#         answer_text = request.POST.get("answer_text")
-#         if answer_text:
-#             Answer.objects.create(user=request.user, qus=question, text=answer_text)
-#             messages.success(request, "Answer submitted successfully!")
-#         else:
-#             messages.error(request, "Answer cannot be empty.")
-#     return redirect("faq_page")
-
-
