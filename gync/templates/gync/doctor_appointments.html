@@ -25,10 +25,10 @@
             <tbody>
                 {% for appointment in pending_appointments %}
                 <tr>
-                    <td>{{ appointment.date }}</td>
-                    <td>{{ appointment.time }}</td>
-                    <td>{{ appointment.patient_name }}</td>
-                    <td>{{ appointment.patient_email }}</td>
+                    <td>{{ appointment.1 }}</td>
+                    <td>{{ appointment.2 }}</td>
+                    <td>{{ appointment.3 }}</td>
+                    <td>{{ appointment.4 }}</td>
                     <td>
                         <form action="{% url 'gync:confirm_appointment' appointment.0 %}" method="POST" style="display: inline;">
                             {% csrf_token %}
