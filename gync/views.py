@@ -45,24 +45,33 @@ def blog_detail(request, blog_id):
     return render(request, 'gync/blog_detail.html', {'blog': blog})
 
 #aishna
+
 @login_required
 def doctor_appointments_view(request):
-    user_id = request.user.id
-    print(user_id)
-    # Fetch doctor ID from doctor_table
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
-        doctor_table = cursor.fetchone()
+    print(f"Debug: Logged-in User ID -> {request.user.id}")
+    print(f"Debug: Logged-in User Username -> {request.user.username}")
 
-    # if not doctor_table:
+    user_id = request.user.id
+    print(f"User ID: {user_id}")
+
+    # Fetch doctor ID from doctor_table
+    # with connection.cursor() as cursor:
+    #     cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
+    #     doctor_table = cursor.fetchone()
+    with connection.cursor() as cursor:
+          cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
+          doctor_table = cursor.fetchone()
+    print(f"Raw doctor_table result: {doctor_table}")  # Debugging line
+    # if not doctor_table:  # Ensure doctor exists
     #     return render(request, 'error_page.html', {'message': 'Doctor profile not found'})
-    #print("doctor_table:", doctor_table)  # Debugging
-    doctor_id = doctor_table[0]  # Extract doctor ID
+
+    doctor_id = doctor_table[0]
+    print(f"Doctor ID: {doctor_id}")
 
     # Fetch Pending Appointments
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT a.id, a.date, a.time, p.username AS patient_name, p.email, a.status
+            SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
             WHERE a.doctor_id = %s AND a.status = 'Pending'
@@ -73,13 +82,16 @@ def doctor_appointments_view(request):
     # Fetch Confirmed Appointments
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT a.id, a.date, a.time, p.username AS patient_name, p.email, a.status
+            SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
             WHERE a.doctor_id = %s AND a.status = 'Confirmed'
             ORDER BY a.date DESC, a.time DESC;
         """, [doctor_id])
         confirmed_appointments = cursor.fetchall()
+
+    print("Pending Appointments:", pending_appointments)
+    print("Confirmed Appointments:",confirmed_appointments)
 
     return render(request, 'gync/doctor_appointments.html', {
         'pending_appointments': pending_appointments,
@@ -89,21 +101,13 @@ def doctor_appointments_view(request):
 @login_required
 def confirm_appointment(request, appointment_id):
     with connection.cursor() as cursor:
-        cursor.execute("""
-            UPDATE gync_appointment
-            SET status = 'Confirmed'
-            WHERE id = %s
-        """, [appointment_id])
+        cursor.execute("UPDATE gync_appointment SET status = 'Confirmed' WHERE id = %s", [appointment_id])
         connection.commit()
     return redirect('gync:doctor_appointments')
 
 @login_required
 def reject_appointment(request, appointment_id):
     with connection.cursor() as cursor:
-        cursor.execute("""
-            UPDATE gync_appointment
-            SET status = 'Rejected'
-            WHERE id = %s
-        """, [appointment_id])
+        cursor.execute("UPDATE gync_appointment SET status = 'Rejected' WHERE id = %s", [appointment_id])
         connection.commit()
     return redirect('gync:doctor_appointments')
