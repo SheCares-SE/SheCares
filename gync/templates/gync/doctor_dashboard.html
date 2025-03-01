@@ -41,6 +41,23 @@
         </ul>
     </section>
 
+
+    <section class="container mt-4">
+        <h3>My Blogs</h3>
+        <ul>
+            {% for blog in blogs %}
+                <li>
+                    <a href="{% url 'gync:blog_detail' blog.id %}" class="text-success">
+                        {{ blog.title }}
+                    </a>
+                </li>
+            {% empty %}
+                <li>No blogs yet.</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'gync:blog_list' %}" class="btn btn-info mt-2">Manage Blogs</a>
+    </section>
+    
     <section class="container mt-4">
         <h3>Answer FAQs</h3>
         {% for faq in unanswered_faqs %}
