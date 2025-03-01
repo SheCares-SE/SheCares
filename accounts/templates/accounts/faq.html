@@ -59,7 +59,7 @@
           {% endfor %}
           
           <!-- Answer Button and Form (Only for Doctors) -->
-          {% if user.role == "doctor" %}
+          {% if role == "doctor" %}
             <button onclick="toggleAnswerForm('{{ question.qus_id }}')" class="mt-3 bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 transition">
               Answer This Question
             </button>
