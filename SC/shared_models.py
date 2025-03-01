@@ -12,3 +12,4 @@ class Blog(models.Model):
     
     class Meta:
         app_label = 'SC'
+        db_table = "SC_blog"

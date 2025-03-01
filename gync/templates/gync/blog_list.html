@@ -23,6 +23,14 @@
                 <li class="text-gray-500">No blogs found.</li>
             {% endfor %}
         </ul>
+
+        <div class="mt-4">
+            {% if show_all %}
+                <a href="{% url 'gync:blog_list' %}" class="text-blue-600 hover:underline">Show My Blogs</a>
+            {% else %}
+                <a href="{% url 'gync:blog_list' %}?show_all=true" class="text-blue-600 hover:underline">Show All Blogs</a>
+            {% endif %}
+        </div>
     </div>
     
     
