@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import login, authenticate,get_user_model
-from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm
+from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm, ProfilePictureForm
 from .models import User, PatientProfile, DoctorProfile
 from gync.models import DoctorProfile # Fetch doctor data
 from patient.models import Patient  # Fetch patient data
@@ -16,6 +16,27 @@ from django.utils import timezone
 from django.http import HttpResponse  # Add this import
 from django.urls import reverse
 from django.http import JsonResponse
+
+#Aesha
+@login_required
+def upload_profile_picture(request):
+    if request.method == 'POST':
+        form = ProfilePictureForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:profile_view')  # Redirect to profile after upload
+
+    return redirect('accounts:profile_view')
+
+
+@login_required
+def remove_profile_picture(request):
+    user = request.user
+    if user.profile_picture:
+        user.profile_picture.delete()
+        user.profile_picture = None
+        user.save()
+    return redirect('accounts:profile_view')
 
 # Aishna
 def login_view(request):
@@ -227,13 +248,14 @@ def profile_view(request):
         if user.role == 'patient':
             # Fetch patient details from accounts_patient_profile_table
             cursor.execute("""
-                SELECT username, age, role 
+                SELECT username, age, role, profile_picture 
                 FROM accounts_user
                 WHERE id = %s
             """, [user.id])
             row = cursor.fetchone()
             if row:
                 profile_data = {
+                    "profile_picture": row[3] if row[3] else None,
                     "username": row[0],
                     "age": row[1],
                     "role": row[2],
@@ -241,18 +263,23 @@ def profile_view(request):
         elif user.role == 'doctor':
             # Fetch doctor details from doctor_table
             cursor.execute("""
-                SELECT registration_number, specialization 
-                FROM doctor_table 
-                WHERE user_id = %s
+                SELECT d.registration_number, d.specialization, u.username, u.profile_picture
+                FROM doctor_table d
+                INNER JOIN accounts_user u ON d.user_id = u.id
+                WHERE d.user_id = %s
             """, [user.id])
             row = cursor.fetchone()
             if row:
                 profile_data = {
+                    "profile_picture":row[2] if row[2] else None,
+                    "username":row[2],
                     "registration_number": row[0],
                     "specialization": row[1],
                 }
+    form = ProfilePictureForm()
 
-    return render(request, 'accounts/profile.html', {'profile': profile_data})
+    return render(request, 'accounts/profile.html', {'profile': profile_data,
+                                                     'form': form})
 
 #Urvashi
 @login_required
@@ -322,5 +349,9 @@ def add_answer(request, question_id):
 #         else:
 #             messages.error(request, "Answer cannot be empty.")
 #     return redirect("faq_page")
+
+
+
+
 
 

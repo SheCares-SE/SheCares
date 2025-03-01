@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Your Profile</title>
+  <title>{{ request.user.username }}'s Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6 flex items-center justify-center min-h-screen">
@@ -14,29 +14,113 @@
       <hr class="my-4">
     </div>
 
-    {% if profile %}
-      {% if request.user.role == 'patient' %}
-        <div class="p-4 bg-blue-50 rounded-lg shadow-md">
-          <h2 class="text-2xl font-semibold text-blue-600"> Details</h2>
-          <p class="text-lg text-gray-700"><strong>Username:</strong> {{ profile.username }}</p>
-          <p class="text-lg text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
-        </div>
-      {% elif request.user.role == 'doctor' %}
-        <div class="p-4 bg-green-50 rounded-lg shadow-md">
-          <h2 class="text-2xl font-semibold text-green-600">Doctor Details</h2>
-          <p class="text-lg text-gray-700"><strong>Registration Number:</strong> {{ profile.registration_number }}</p>
-          <p class="text-lg text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
-        </div>
+    <!-- Profile Picture Section -->
+    <div class="text-center">
+      {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" class="w-32 h-32 rounded-full mx-auto border border-gray-300 shadow-md">
+        <form method="post" action="{% url 'accounts:remove_profile_picture' %}" class="mt-2">
+          {% csrf_token %}
+          <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+            Remove
+          </button>
+        </form>
       {% endif %}
+    </div>
+
+<!-- Profile Picture Upload -->
+<form method="post" action="{% url 'accounts:upload_profile_picture' %}" enctype="multipart/form-data" class="mt-4">
+  {% csrf_token %}
+
+  <!-- Custom File Upload Button -->
+  <div class="relative w-full">
+    <input type="file" name="profile_picture" id="fileInput" class="hidden" onchange="updateFileName()">
+    
+    <div class="flex justify-center mt-4">
+      <label for="fileInput" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow cursor-pointer w-1/2 flex justify-center items-center">
+        Choose a Profile Picture
+      </label>
+    </div>
+
+    <!-- Selected File Name Display -->
+    <p id="fileName" class="text-center text-gray-500 text-sm mt-2">No file chosen</p>
+  </div>
+
+  <div class="flex justify-center mt-4">
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition w-1/2">
+      Upload
+    </button>
+  </div>
+</form>
+
+<!-- JavaScript for File Name Display -->
+<script>
+  function updateFileName() {
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+
+    if (fileInput.files.length > 0) {
+      fileName.textContent = "Selected file: " + fileInput.files[0].name;
+      fileName.classList.remove("text-gray-500");
+      fileName.classList.add("text-green-600", "font-semibold");
+    } else {
+      fileName.textContent = "No file chosen";
+      fileName.classList.remove("text-green-600", "font-semibold");
+      fileName.classList.add("text-gray-500");
+    }
+  }
+</script>
+
+
+        {% comment %} <!-- Selected File Name Display -->
+        <p id="fileName" class="text-center text-gray-500 text-sm mt-2">No file chosen</p>
+      </div> {% endcomment %}
+
+      {% comment %} <div class="flex justify-center mt-4">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition w-1/2">
+          Upload 
+        </button>
+      </div> {% endcomment %}
+      
+      
+      </button>
+    </form>
+
+    <!-- Profile Details -->
+    {% if profile %}
+      <div class="mt-6 p-4 rounded-lg shadow-md 
+                  {% if request.user.role == 'patient' %} bg-blue-50 border-l-4 border-blue-400 {% else %} bg-green-50 border-l-4 border-green-400 {% endif %}">
+
+        <h2 class="text-xl font-semibold 
+                   {% if request.user.role == 'patient' %} text-blue-600 {% else %} text-green-600 {% endif %}">
+          Details
+        </h2>
+
+        <p class="text-gray-700 mt-2"><strong>Username:</strong> {{ profile.username }}</p>
+
+        {% if request.user.role == 'patient' %}
+          <p class="text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
+        {% elif request.user.role == 'doctor' %}
+          <p class="text-gray-700"><strong>Registration No.:</strong> {{ profile.registration_number }}</p>
+          <p class="text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
+        {% endif %}
+      </div>
     {% else %}
-      <p class="text-center text-gray-500">No profile data available.</p>
+      <p class="text-center text-gray-500 mt-4">No profile data available.</p>
     {% endif %}
 
-    {% comment %} <div class="text-center mt-6">
-      <a href="{% url 'accounts:edit_profile' %}" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition">
-        Edit Profile
-      </a>
-    </div> {% endcomment %}
   </div>
+
+  <!-- JavaScript for File Name Display -->
+  <script>
+    function updateFileName() {
+      const fileInput = document.getElementById('fileInput');
+      const fileName = document.getElementById('fileName');
+
+      if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+      } 
+    }
+  </script>
+
 </body>
 </html>

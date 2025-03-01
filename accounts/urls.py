@@ -5,11 +5,14 @@ from django.contrib.auth.views import LogoutView
 from django.urls import reverse_lazy
 from patient.views import patient_dashboard  
 from gync.views import doctor_dashboard  
-from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer
+from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer ,profile_view, upload_profile_picture, remove_profile_picture
 
 app_name = 'accounts'  # Define the app namespace
 
 urlpatterns = [
+    path('profile/', profile_view, name='profile_view'),
+    path('profile/upload_picture/', upload_profile_picture, name='upload_profile_picture'),
+    path('profile/remove_picture/', remove_profile_picture, name='remove_profile_picture'),
     path('doctor-dashboard/', doctor_dashboard, name='doctor_dashboard'),
     path('patient-dashboard/', patient_dashboard, name='patient_dashboard'),
     path('profile/', views.profile_view, name='profile'),
@@ -29,3 +32,5 @@ path("faq/like_question/", upvote_question, name="upvote_question"),
     path('patient/', include('patient.urls', namespace='patient')),
     path('gync/', include('gync.urls', namespace='gync')),
 ]
+
+

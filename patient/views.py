@@ -6,6 +6,8 @@ from gync.models import DoctorProfile, Appointment
 from .forms import AppointmentForm
 import logging
 from .models import Doctor
+from datetime import datetime , timedelta # ✅ Add this line
+
 logger = logging.getLogger(__name__)
 
 # Ensure no multiple definitions for patient_dashboard
@@ -79,6 +81,7 @@ def book_appointment(request):
             date_new=date.strftime('%Y-%m-%d')
             time_new= str(time.strftime('%H:%M:%S')) 
             patient_id = request.user.id 
+            print(f"Selected Doctor ID: {doctor_id}")  # Debugging print
             # Save appointment using raw SQL query
             print(f"Appointment Date: {date_new}, Appointment Time: {time_new}")
             with connection.cursor() as cursor:
@@ -102,8 +105,7 @@ def patient_appointments(request):
         cursor.execute("""
             SELECT a.id, a.date, a.time, a.status, u.username
             FROM gync_appointment a
-            JOIN doctor_table d ON a.doctor_id = d.id
-            JOIN accounts_user u ON d.user_id = u.id
+            JOIN accounts_user u ON a.doctor_id = u.id
             WHERE a.patient_id = %s
             ORDER BY a.date DESC, a.time DESC
         """, [request.user.id])
@@ -122,6 +124,30 @@ def patient_appointments(request):
         for row in appointments
     ]
 
-    print("Appointments List:", appointments_list)  # Debugging
 
     return render(request, "patient/patient_appointments.html", {"appointments": appointments_list})
+
+@login_required
+def cancel_appointment(request, appointment_id):
+    """Allow patient to cancel their appointment if it's at least 1 hour away."""
+    with connection.cursor() as cursor:
+        # Fetch the appointment time
+        cursor.execute("SELECT date, time FROM gync_appointment WHERE id = %s AND patient_id = %s", 
+                       [appointment_id, request.user.id])
+        appointment = cursor.fetchone()
+        current_time = datetime.now()
+        if not appointment:
+            print("Invalid appointment or unauthorized access")
+            return redirect('patient:patient_appointments')
+
+        appointment_datetime = f"{appointment[0]} {appointment[1]}"  # Convert date + time
+        appointment_time = datetime.strptime(appointment_datetime, "%Y-%m-%d %H:%M:%S")
+
+        # Check if the appointment is at least 1 hour away
+        if appointment_time > (current_time + timedelta(hours=1)):
+            cursor.execute("UPDATE gync_appointment SET status = 'Cancelled' WHERE id = %s", [appointment_id])
+            print(f"Appointment {appointment_id} cancelled successfully")
+        else:
+            print("Cannot cancel appointment less than 1 hour before the time.")
+
+    return redirect('patient:patient_appointments')
