@@ -1,4 +1,4 @@
-{% comment %} <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -43,8 +43,37 @@
             color: #777;
         }
     </style>
-</head>
-<body>
+</head> 
+{% comment %} <body>
+    <h2>Select City</h2>
+    <form method="GET">
+        <select name="city" onchange="this.form.submit()">
+            <option value="">-- Select City--</option>
+            <option value="your_city" {% if selected_city == 'your_city' %}selected{% endif %}>Your City</option>
+        {% for city in cities %}
+            <option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>
+                {{ city }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <h2>Available Doctors</h2>
+    {% if doctors %}
+        <ul>
+            {% for doctor in doctors %}
+                <li>
+                    <strong>Dr. {{ doctor.0 }}</strong><br>
+                    <small>Registration No: {{ doctor.1 }}</small><br>
+                    <small>Specialization: {{ doctor.2 }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No doctors available for this specialization.</p>
+    {% endif %}
+
+
     <h2>Select Specialization</h2>
     <form method="GET">
         <select name="specialization" onchange="this.form.submit()">
@@ -71,9 +100,71 @@
     {% else %}
         <p>No doctors available for this specialization.</p>
     {% endif %}
+
+
+
+    {% comment %} <h2>Available Doctors</h2>
+{% if doctors %}
+    <ul>
+        {% for doctor in doctors %}
+            <li>
+                <strong>Dr. {{ doctor.0 }}</strong><br>
+                <small>Registration No: {{ doctor.1 }}</small><br>
+                <small>Specialization: {{ doctor.2 }}</small><br>
+                <small>City: {{ doctor.3 }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No doctors available for this specialization and city.</p>
+{% endif %} {% endcomment %}
+
+{% comment %}</body> {% endcomment %}
+<body>
+    <h2>Filter Doctors</h2>
+    <form method="GET">
+        <!-- City Selection -->
+        <label for="city">Select City:</label>
+        <select name="city" id="city" onchange="this.form.submit()">
+            <option value="">-- Select City --</option>
+            {% for city in cities %}
+                <option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>
+                    {{ city }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <br>
+
+        <!-- Specialization Selection -->
+        <label for="specialization">Select Specialization:</label>
+        <select name="specialization" id="specialization" onchange="this.form.submit()">
+            <option value="">-- Select Specialization --</option>
+            {% for spec in specializations %}
+                <option value="{{ spec }}" {% if selected_specialization == spec %}selected{% endif %}>
+                    {{ spec }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <h2>Available Doctors</h2>
+    {% if doctors %}
+        <ul>
+            {% for doctor in doctors %}
+                <li>
+                    <strong>Dr. {{ doctor.0 }}</strong><br>
+                    <small>Registration No: {{ doctor.1 }}</small><br>
+                    <small>Specialization: {{ doctor.2 }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No doctors available for this selection.</p>
+    {% endif %}
 </body>
-</html> {% endcomment %}
-<!DOCTYPE html>
+</html> 
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -142,4 +233,5 @@
         {% endif %}
     </div>
 </body>
-</html>
+
+</html> {% endcomment %}

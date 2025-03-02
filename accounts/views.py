@@ -129,34 +129,156 @@ def select_role_view(request):
 #         'selected_specialization': selected_specialization
 #     })
 
+# def recommend_doctor_view(request):
+#     """Fetch specializations and doctors based on selection using raw MySQL queries"""
+
+#     with connection.cursor() as cursor:
+#         # Get distinct specializations from the database
+#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
+#         specializations = [row[0] for row in cursor.fetchall()]
+
+#         # Get selected specialization from user input
+#         selected_specialization = request.GET.get('specialization', '').lower()
+
+#         # Fetch doctors based on the selected specialization
+#         doctors = []
+#         if selected_specialization:
+#             cursor.execute("""
+#                 SELECT accounts_user.username, doctor_table.registration_number, doctor_table.specialization
+#                 FROM doctor_table
+#                 JOIN accounts_user ON doctor_table.user_id = accounts_user.id
+#                 WHERE doctor_table.specialization = LOWER(%s)
+#             """, [selected_specialization])
+            
+#             doctors = cursor.fetchall()  # Returns list of tuples (username, registration_number, specialization)
+    
+#     return render(request, 'accounts/recommend_doctor.html', {
+#         'specializations': specializations,
+#         'doctors': doctors,
+#         'selected_specialization': selected_specialization
+#     })
+# def recommend_doctor_view(request):
+#     selected_specialization = request.GET.get('specialization', '')
+#     selected_city = request.GET.get('city', '')
+
+#     with connection.cursor() as cursor:
+#         # Fetch all available specializations
+#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
+#         specializations = [row[0] for row in cursor.fetchall()]
+
+#         # Fetch all available cities
+#         cursor.execute("SELECT DISTINCT city FROM accounts_user")
+#         cities = [row[0] for row in cursor.fetchall()]
+
+#         # Query to filter doctors based on specialization and city using INNER JOIN
+#         query = """
+#             SELECT u.first_name, d.registration_number, d.specialization, u.city 
+#             FROM doctor_table d 
+#             INNER JOIN accounts_user u 
+#             ON d.id = u.id
+#             WHERE (%s IS NULL OR d.specialization = %s) 
+#             AND (%s IS NULL OR u.city = %s);
+#         """
+#         cursor.execute(query, (selected_specialization or None, selected_specialization, selected_city or None, selected_city))
+#         doctors = cursor.fetchall()
+
+#     return render(request, 'recommend_doctor.html', {
+#         'specializations': specializations,
+#         'selected_specialization': selected_specialization,
+#         'cities': cities,
+#         'selected_city': selected_city,
+#         'doctors': doctors
+#     })
+
+from django.shortcuts import render
+from django.db import connection
+
+# def recommend_doctor_view(request):
+#     selected_city = request.GET.get('city', '')
+#     selected_specialization = request.GET.get('specialization', '')
+
+#     with connection.cursor() as cursor:
+#         # 🔹 Get unique cities (If stored in accounts_user)
+#         cursor.execute("SELECT DISTINCT city FROM doctor_table")
+#         cities = [row[0] for row in cursor.fetchall()]
+
+#         # 🔹 Get unique specializations
+#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
+#         specializations = [row[0] for row in cursor.fetchall()]
+
+#         # 🔹 Fetch doctors based on selected city and specialization
+#         query = """
+#         SELECT au.username,  dt.registration_number ,dt.specialization
+#         FROM doctor_table dt
+#         JOIN accounts_user au ON dt.user_id = au.id
+#         """
+
+#         params = []
+
+#         if selected_city:
+#             query += " AND dt.city = %s"
+#             params.append(selected_city)
+
+#         if selected_specialization:
+#             query += " AND dt.specialization = %s"
+#             params.append(selected_specialization)
+
+#         cursor.execute(query, params)
+#         doctors = cursor.fetchall()
+
+#     return render(request, 'accounts/recommend_doctor.html', {
+#         'cities': cities,
+#         'specializations': specializations,
+#         'selected_city': selected_city,
+#         'selected_specialization': selected_specialization,
+#         'doctors': doctors
+#     })
+
 def recommend_doctor_view(request):
-    """Fetch specializations and doctors based on selection using raw MySQL queries"""
+    selected_city = request.GET.get('city', '')
+    selected_specialization = request.GET.get('specialization', '')
 
     with connection.cursor() as cursor:
-        # Get distinct specializations from the database
+        # 🔹 Get unique cities from doctor_table
+        cursor.execute("SELECT DISTINCT city FROM doctor_table")
+        cities = [row[0] for row in cursor.fetchall() if row[0]]
+
+        # 🔹 Get unique specializations
         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
         specializations = [row[0] for row in cursor.fetchall()]
 
-        # Get selected specialization from user input
-        selected_specialization = request.GET.get('specialization', '').lower()
+        # 🔹 Fetch doctors based on selected city and specialization
+        query = """
+        SELECT au.username, dt.registration_number, dt.specialization, dt.city
+        FROM doctor_table dt
+        JOIN accounts_user au ON dt.user_id = au.id
+        """
+        params = []
+        conditions = []
 
-        # Fetch doctors based on the selected specialization
-        doctors = []
+        # Apply filters only if values are selected
+        if selected_city:
+            conditions.append("dt.city = %s")
+            params.append(selected_city)
         if selected_specialization:
-            cursor.execute("""
-                SELECT accounts_user.username, doctor_table.registration_number, doctor_table.specialization
-                FROM doctor_table
-                JOIN accounts_user ON doctor_table.user_id = accounts_user.id
-                WHERE doctor_table.specialization = LOWER(%s)
-            """, [selected_specialization])
-            
-            doctors = cursor.fetchall()  # Returns list of tuples (username, registration_number, specialization)
-    
+            conditions.append("dt.specialization = %s")
+            params.append(selected_specialization)
+
+        # Add WHERE clause only if there are conditions
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        cursor.execute(query, params)
+        doctors = cursor.fetchall()
+
     return render(request, 'accounts/recommend_doctor.html', {
+        'cities': cities,
         'specializations': specializations,
-        'doctors': doctors,
-        'selected_specialization': selected_specialization
+        'selected_city': selected_city,
+        'selected_specialization': selected_specialization,
+        'doctors': doctors
     })
+
 
 # Aishna
 def signup_view(request, role):
@@ -208,12 +330,13 @@ def signup_view(request, role):
                 user_id = cursor.fetchone()[0]
 
             if role == 'doctor':
+                city = user_data.get('city', 'Default City')
                 # Insert doctor profile into the doctor_table
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO doctor_table (user_id, registration_number, specialization)
-                        VALUES (%s, %s, %s)
-                    """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization')])
+                        INSERT INTO doctor_table (user_id, registration_number, specialization,city)
+                        VALUES (%s, %s, %s,%s)
+                    """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization'),city])
             else:
                 # Insert patient profile into the accounts_patient_profile_table
                 with connection.cursor() as cursor:
