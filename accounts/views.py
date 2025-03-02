@@ -483,7 +483,7 @@ def faq_page(request):
                     INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
                     VALUES (%s, %s, NOW(), 0)
                 """, [request.user.id, question_text])
-                messages.success(request, "Question submitted successfully!")
+                # messages.success(request, "Question submitted successfully!")
             else:
                 messages.error(request, "Question cannot be empty.")
         # If an answer is submitted:
@@ -501,7 +501,7 @@ def faq_page(request):
                             INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
                             VALUES (%s, %s, %s, NOW(), 0)
                         """, [question_id, request.user.id, answer_text])
-                        messages.success(request, "Answer submitted successfully!")
+                        # messages.success(request, "Answer submitted successfully!")
                     else:
                         messages.error(request, "Answer cannot be empty.")
                 else:
