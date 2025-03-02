@@ -1,0 +1,7 @@
+{% for doctor in doctors %}
+    <div>
+        <h3>{{ doctor.user.first_name }} {{ doctor.user.last_name }}</h3>
+        <p>Specialization: {{ doctor.specialization }}</p>
+        <a href="{% url 'gync:gynecologist_profile' doctor.user.id %}">View Profile</a>
+    </div>
+{% endfor %}

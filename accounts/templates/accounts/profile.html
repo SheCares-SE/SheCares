@@ -99,9 +99,34 @@
 
         {% if request.user.role == 'patient' %}
           <p class="text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
+          
         {% elif request.user.role == 'doctor' %}
+        <p><strong>Average Patient Rating:</strong> {{ profile.avg_rating }} ⭐</p>
           <p class="text-gray-700"><strong>Registration No.:</strong> {{ profile.registration_number }}</p>
           <p class="text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
+           {% comment %} <!-- Average Rating Section -->
+<div class="mt-6 p-4 rounded-lg shadow-md bg-yellow-50 border-l-4 border-yellow-400">
+  <h2 class="text-xl font-semibold text-yellow-600">Doctor Rating</h2>
+  <p class="text-gray-700 mt-2"><strong>Average Rating:</strong> {{ profile.avg_rating }} ⭐</p>
+</div>
+
+<!-- Feedback List -->
+<div class="mt-6 p-4 rounded-lg shadow-md bg-gray-50 border-l-4 border-gray-400">
+  <h2 class="text-xl font-semibold text-gray-600">Patient Feedback</h2>
+  {% if profile.feedback_list %}
+    <ul class="mt-2 space-y-2">
+      {% for feedback, rating, patient_id in profile.feedback_list %}
+        <li class="bg-white p-3 rounded shadow">
+          <p class="text-gray-700"><strong>Rating:</strong> {{ rating }} ⭐</p>
+          <p class="text-gray-500"><strong>Feedback:</strong> {{ feedback }}</p>
+          <p class="text-sm text-gray-400">Patient ID: {{ patient_id }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-500">No feedback yet.</p>
+  {% endif %}
+</div> {% endcomment %}
         {% endif %}
       </div>
     {% else %}
@@ -109,6 +134,8 @@
     {% endif %}
 
   </div>
+ 
+
 
   <!-- JavaScript for File Name Display -->
   <script>

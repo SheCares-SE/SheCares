@@ -1,0 +1,58 @@
+{% comment %} {% extends 'base.html' %}
+{% block content %}
+<h2>{{ doctor.user.first_name }} {{ doctor.user.last_name }}</h2>
+<p>Specialization: {{ doctor.specialization }}</p>
+<p>Average Rating: {{ avg_rating }}</p>
+
+<h3>Rate this Doctor</h3>
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Feedback</button>
+</form>
+
+<h3>Previous Feedbacks</h3>
+<ul>
+    {% for feedback in feedbacks %}
+        <li>{{ feedback.patient.first_name }}: {{ feedback.rating }}/5 - "{{ feedback.feedback }}"</li>
+    {% empty %}
+        <li>No feedback yet.</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'accounts:recommend_doctor' %}">Back to Doctor List</a>
+{% endblock %} {% endcomment %}
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Dr. {{ doctor.user.get_full_name }}'s Profile</h2>
+  
+  <!-- Display average rating -->
+  <p><strong>Average Rating:</strong> {{ avg_rating }}</p>
+  
+  <!-- Display past feedbacks -->
+  <h3>Feedbacks</h3>
+  {% if feedbacks %}
+    <ul>
+      {% for feedback in feedbacks %}
+        <li>
+          <p><strong>Rating:</strong> {{ feedback.rating }} / 5</p>
+          <p>{{ feedback.feedback }}</p>
+          <p><em>By {{ feedback.patient.get_full_name }} on {{ feedback.created_at|date:"F d, Y" }}</em></p>
+        </li>
+      {% empty %}
+        <p>No feedbacks yet.</p>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No feedbacks yet.</p>
+  {% endif %}
+  
+  <!-- Feedback form for logged-in patient -->
+  <h3>Leave Your Feedback</h3>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Feedback</button>
+  </form>
+{% endblock %}

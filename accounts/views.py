@@ -17,7 +17,174 @@ from django.http import HttpResponse  # Add this import
 from django.urls import reverse
 from django.http import JsonResponse
 
+def doctor_profile(request, doctor_id):
+    with connection.cursor() as cursor:
+        # Fetch doctor details
+        cursor.execute("""
+            SELECT u.first_name, u.last_name, d.specialization, d.city
+            FROM doctor_table d
+            JOIN accounts_user u ON d.user_id = u.id
+            WHERE d.user_id = %s
+        """, [doctor_id])
+        doctor = cursor.fetchone()
+
+        if not doctor:
+            return HttpResponse("Doctor not found", status=404)
+
+        # Fetch feedback
+        cursor.execute("""
+            SELECT df.feedback, df.rating, u.first_name
+            FROM doctor_feedback df
+            JOIN accounts_user u ON df.patient_id = u.id
+            WHERE df.doctor_id = %s
+        """, [doctor_id])
+        feedback_list = cursor.fetchall()
+
+        # Calculate average rating
+        cursor.execute("""
+            SELECT COALESCE(AVG(rating), 0)
+            FROM doctor_feedback
+            WHERE doctor_id = %s
+        """, [doctor_id])
+        avg_rating = cursor.fetchone()[0]
+
+    context = {
+        "first_name": doctor[0],
+        "last_name": doctor[1],
+        "specialization": doctor[2],
+        "city": doctor[3],
+        "avg_rating": avg_rating,
+        "feedback_list": feedback_list,
+        "doctor_id": doctor_id
+    }
+    return render(request, 'accounts/doctor_profile.html', context)
+
 #Aesha
+# def gynecologist_profile_view(request, doctor_id):
+#     from gync.models import Doctor
+    
+#     doctor = get_object_or_404(Doctor, id=doctor_id)
+    
+    
+#     with connection.cursor() as cursor:
+#         cursor.execute("""
+#             SELECT au.id, au.username, dt.specialization 
+#             FROM accounts_user au
+#             JOIN doctor_table dt ON au.id = dt.user_id
+#             WHERE au.role = 'doctor' AND au.id = %s
+#         """, [doctor_id])
+#         row = cursor.fetchone()  # Change variable name
+
+
+#         cursor.execute("""
+#             SELECT df.feedback, df.rating, au.first_name AS patient_name 
+#             FROM doctor_feedback df
+#             JOIN accounts_user au ON df.patient_id = au.id
+#             WHERE df.doctor_id = %s
+#             ORDER BY df.created_at DESC;
+#         """, [doctor_id])
+#         feedback_list = cursor.fetchall()
+
+#         cursor.execute("""
+#             SELECT ROUND(AVG(rating), 1) AS avg_rating
+#             FROM doctor_feedback
+#             WHERE doctor_id = %s
+#             GROUP BY doctor_id;
+#         """, [doctor_id])
+#         avg_rating = cursor.fetchone()
+
+#     if not doctor:
+#         return render(request, '404.html', status=404)
+
+#     doctor_details = {
+#         "id": row[0],
+#         # "first_name": doctor[1],
+#         "username": row[1],
+#         "specialization": row[2],
+#         "avg_rating": avg_rating[0] if avg_rating else "No ratings yet",
+#         "feedback_list": feedback_list
+#     }
+
+#     context = {
+#         'doctor': doctor_details,
+#         'doctor_id': doctor_id,  # Explicitly ensure doctor_id is passed
+#     }
+
+#     return render(request, 'accounts/doctor_profile.html', context)
+
+def gynecologist_profile_view(request, doctor_id):
+    from gync.models import Doctor
+
+    # Get doctor using ORM first
+    doctor_obj = get_object_or_404(Doctor, id=doctor_id)  
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT au.id, au.username, dt.specialization 
+            FROM accounts_user au
+            JOIN doctor_table dt ON au.id = dt.user_id
+            WHERE au.role = 'doctor' AND au.id = %s
+        """, [doctor_id])
+        row = cursor.fetchone()
+        
+        if not row:
+            return render(request, '404.html', status=404)
+
+        doctor_details = {
+            "id": row[0],
+            "username": row[1],
+            "specialization": row[2],
+        }
+
+        cursor.execute("""
+            SELECT df.feedback, df.rating, au.username AS patient_name 
+            FROM doctor_feedback df
+            JOIN accounts_user au ON df.patient_id = au.id
+            WHERE df.doctor_id = %s
+            ORDER BY df.created_at DESC;
+        """, [doctor_id])
+        feedback_list = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT ROUND(AVG(rating), 1) AS avg_rating
+            FROM doctor_feedback
+            WHERE doctor_id = %s
+            GROUP BY doctor_id;
+        """, [doctor_id])
+        avg_rating = cursor.fetchone()
+
+    doctor_details["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
+    doctor_details["feedback_list"] = feedback_list
+
+    # ✅ Corrected context dictionary
+    context = {
+        "doctor": doctor_details,
+        "doctor_id": doctor_id
+    }
+
+    return render(request, 'accounts/doctor_profile.html', context)
+
+
+
+def submit_feedback(request, doctor_id):
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        feedback = request.POST.get("feedback")
+        patient_id = request.user.id  # Get logged-in patient ID
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO doctor_feedback (doctor_id, patient_id, rating, feedback, created_at)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, [doctor_id, patient_id, rating, feedback])
+
+        
+        return redirect('accounts:doctor_profile', doctor_id=doctor_id)
+
+    return redirect('accounts:recommend_doctor')
+
+
+
 @login_required
 def upload_profile_picture(request):
     if request.method == 'POST':
@@ -111,173 +278,50 @@ def select_role_view(request):
         form = RoleSelectionForm()
     return render(request, 'accounts/select_role.html', {'form': form})
 
-#priyanka
-# def recommend_doctor_view(request):
-#     """Fetch specializations and doctors based on selection"""
-#     # Get distinct specializations from the database
-#     specializations = DoctorProfile.objects.values_list('specialization', flat=True).distinct()
 
-#     # Get selected specialization from user input
-#     selected_specialization = request.GET.get('specialization', '')
-
-#     # Fetch doctors based on the selected specialization
-#     doctors = DoctorProfile.objects.filter(specialization=selected_specialization) if selected_specialization else []
-
-#     return render(request, 'accounts/recommend_doctor.html', {
-#         'specializations': specializations,
-#         'doctors': doctors,
-#         'selected_specialization': selected_specialization
-#     })
-
-# def recommend_doctor_view(request):
-#     """Fetch specializations and doctors based on selection using raw MySQL queries"""
-
-#     with connection.cursor() as cursor:
-#         # Get distinct specializations from the database
-#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
-#         specializations = [row[0] for row in cursor.fetchall()]
-
-#         # Get selected specialization from user input
-#         selected_specialization = request.GET.get('specialization', '').lower()
-
-#         # Fetch doctors based on the selected specialization
-#         doctors = []
-#         if selected_specialization:
-#             cursor.execute("""
-#                 SELECT accounts_user.username, doctor_table.registration_number, doctor_table.specialization
-#                 FROM doctor_table
-#                 JOIN accounts_user ON doctor_table.user_id = accounts_user.id
-#                 WHERE doctor_table.specialization = LOWER(%s)
-#             """, [selected_specialization])
-            
-#             doctors = cursor.fetchall()  # Returns list of tuples (username, registration_number, specialization)
-    
-#     return render(request, 'accounts/recommend_doctor.html', {
-#         'specializations': specializations,
-#         'doctors': doctors,
-#         'selected_specialization': selected_specialization
-#     })
-# def recommend_doctor_view(request):
-#     selected_specialization = request.GET.get('specialization', '')
-#     selected_city = request.GET.get('city', '')
-
-#     with connection.cursor() as cursor:
-#         # Fetch all available specializations
-#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
-#         specializations = [row[0] for row in cursor.fetchall()]
-
-#         # Fetch all available cities
-#         cursor.execute("SELECT DISTINCT city FROM accounts_user")
-#         cities = [row[0] for row in cursor.fetchall()]
-
-#         # Query to filter doctors based on specialization and city using INNER JOIN
-#         query = """
-#             SELECT u.first_name, d.registration_number, d.specialization, u.city 
-#             FROM doctor_table d 
-#             INNER JOIN accounts_user u 
-#             ON d.id = u.id
-#             WHERE (%s IS NULL OR d.specialization = %s) 
-#             AND (%s IS NULL OR u.city = %s);
-#         """
-#         cursor.execute(query, (selected_specialization or None, selected_specialization, selected_city or None, selected_city))
-#         doctors = cursor.fetchall()
-
-#     return render(request, 'recommend_doctor.html', {
-#         'specializations': specializations,
-#         'selected_specialization': selected_specialization,
-#         'cities': cities,
-#         'selected_city': selected_city,
-#         'doctors': doctors
-#     })
-
-from django.shortcuts import render
-from django.db import connection
-
-# def recommend_doctor_view(request):
-#     selected_city = request.GET.get('city', '')
-#     selected_specialization = request.GET.get('specialization', '')
-
-#     with connection.cursor() as cursor:
-#         # 🔹 Get unique cities (If stored in accounts_user)
-#         cursor.execute("SELECT DISTINCT city FROM doctor_table")
-#         cities = [row[0] for row in cursor.fetchall()]
-
-#         # 🔹 Get unique specializations
-#         cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
-#         specializations = [row[0] for row in cursor.fetchall()]
-
-#         # 🔹 Fetch doctors based on selected city and specialization
-#         query = """
-#         SELECT au.username,  dt.registration_number ,dt.specialization
-#         FROM doctor_table dt
-#         JOIN accounts_user au ON dt.user_id = au.id
-#         """
-
-#         params = []
-
-#         if selected_city:
-#             query += " AND dt.city = %s"
-#             params.append(selected_city)
-
-#         if selected_specialization:
-#             query += " AND dt.specialization = %s"
-#             params.append(selected_specialization)
-
-#         cursor.execute(query, params)
-#         doctors = cursor.fetchall()
-
-#     return render(request, 'accounts/recommend_doctor.html', {
-#         'cities': cities,
-#         'specializations': specializations,
-#         'selected_city': selected_city,
-#         'selected_specialization': selected_specialization,
-#         'doctors': doctors
-#     })
-
+# accounts/views.py
 def recommend_doctor_view(request):
+    # Fetch distinct cities and specializations for the filter dropdowns
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT DISTINCT city FROM doctor_table WHERE city IS NOT NULL")
+        cities = [row[0] for row in cursor.fetchall()]
+
+        cursor.execute("SELECT DISTINCT specialization FROM doctor_table WHERE specialization IS NOT NULL")
+        specializations = [row[0] for row in cursor.fetchall()]
+
+    # Get filter parameters from the request
     selected_city = request.GET.get('city', '')
     selected_specialization = request.GET.get('specialization', '')
 
+    # Fetch doctors based on filters
+    query = """
+        SELECT au.id, au.username, dt.registration_number, dt.specialization, dt.city
+        FROM accounts_user au
+        JOIN doctor_table dt ON au.id = dt.user_id
+        WHERE au.role = 'doctor'
+    """
+    params = []
+
+    if selected_city:
+        query += " AND dt.city = %s"
+        params.append(selected_city)
+    if selected_specialization:
+        query += " AND dt.specialization = %s"
+        params.append(selected_specialization)
+
     with connection.cursor() as cursor:
-        # 🔹 Get unique cities from doctor_table
-        cursor.execute("SELECT DISTINCT city FROM doctor_table")
-        cities = [row[0] for row in cursor.fetchall() if row[0]]
-
-        # 🔹 Get unique specializations
-        cursor.execute("SELECT DISTINCT specialization FROM doctor_table")
-        specializations = [row[0] for row in cursor.fetchall()]
-
-        # 🔹 Fetch doctors based on selected city and specialization
-        query = """
-        SELECT au.username, dt.registration_number, dt.specialization, dt.city
-        FROM doctor_table dt
-        JOIN accounts_user au ON dt.user_id = au.id
-        """
-        params = []
-        conditions = []
-
-        # Apply filters only if values are selected
-        if selected_city:
-            conditions.append("dt.city = %s")
-            params.append(selected_city)
-        if selected_specialization:
-            conditions.append("dt.specialization = %s")
-            params.append(selected_specialization)
-
-        # Add WHERE clause only if there are conditions
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-
         cursor.execute(query, params)
         doctors = cursor.fetchall()
 
-    return render(request, 'accounts/recommend_doctor.html', {
+    context = {
         'cities': cities,
         'specializations': specializations,
         'selected_city': selected_city,
         'selected_specialization': selected_specialization,
-        'doctors': doctors
-    })
+        'doctors': doctors,
+    }
+    return render(request, 'accounts/recommend_doctor.html', context)
+
 
 
 # Aishna
@@ -360,8 +404,8 @@ def signup_view(request, role):
         form = DoctorSignupForm() if role == 'doctor' else PatientSignupForm()
 
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
-#Aesha
-@login_required
+
+
 def profile_view(request):
     """View to render the profile page based on user role using SQL queries."""
     user = request.user  # Get the logged-in user
@@ -369,7 +413,7 @@ def profile_view(request):
 
     with connection.cursor() as cursor:
         if user.role == 'patient':
-            # Fetch patient details from accounts_patient_profile_table
+            # Fetch patient details
             cursor.execute("""
                 SELECT username, age, role, profile_picture 
                 FROM accounts_user
@@ -384,7 +428,7 @@ def profile_view(request):
                     "role": row[2],
                 }
         elif user.role == 'doctor':
-            # Fetch doctor details from doctor_table
+            # Fetch doctor details
             cursor.execute("""
                 SELECT d.registration_number, d.specialization, u.username, u.profile_picture
                 FROM doctor_table d
@@ -394,66 +438,36 @@ def profile_view(request):
             row = cursor.fetchone()
             if row:
                 profile_data = {
-                    "profile_picture":row[2] if row[2] else None,
-                    "username":row[2],
+                    "profile_picture": row[3] if row[3] else None,
+                    "username": row[2],
                     "registration_number": row[0],
                     "specialization": row[1],
                 }
+
+            # Fetch average rating
+            cursor.execute("""
+                SELECT ROUND(AVG(rating),1) AS avg_rating
+                FROM doctor_feedback
+                WHERE doctor_id = %s
+                GROUP BY doctor_id;
+            """, [user.id])
+            avg_rating = cursor.fetchone()
+            profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
+
+            # Fetch feedback
+            cursor.execute("""
+                SELECT feedback, rating, patient_id
+                FROM doctor_feedback
+                WHERE doctor_id = %s
+                ORDER BY created_at DESC;
+            """, [user.id])
+            feedback_list = cursor.fetchall()
+            profile_data["feedback_list"] = feedback_list
+
     form = ProfilePictureForm()
 
-    return render(request, 'accounts/profile.html', {'profile': profile_data,
-                                                     'form': form})
+    return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
 
-#Urvashi
-# @login_required
-# def faq_page(request):
-#     if request.method == "POST":
-#         if 'question_text' in request.POST:
-#             question_text = request.POST.get("question_text")
-#             if question_text:
-#                 Question.objects.create(user=request.user, text=question_text)
-#                 messages.success(request, "Question submitted successfully!")
-#             else:
-#                 messages.error(request, "Question cannot be empty.")
-#         elif 'answer_text' in request.POST:
-#             question_id = request.POST.get("qus_id")
-#             answer_text = request.POST.get("answer_text")
-#             question = get_object_or_404(Question, qus_id=question_id)
-            
-#             if request.user.role == "doctor":
-#                 if answer_text:
-#                     Answer.objects.create(user=request.user, qus=question, text=answer_text)
-#                     messages.success(request, "Answer submitted successfully!")
-#                 else:
-#                     messages.error(request, "Answer cannot be empty.")
-#             else:
-#                 messages.error(request, "Only doctors can answer questions.")
-#         return redirect("accounts:faq_page")
-
-#     questions = Question.objects.all().order_by("-upvote_count")
-#     return render(request, "accounts/faq.html", {"questions": questions})
-
-# @login_required
-# def upvote_question(request):
-#     question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
-#     question.upvote_count += 1
-#     question.save()
-#     return JsonResponse({"upvote_count": question.upvote_count})
-
-# @login_required
-# def upvote_answer(request):
-#     answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
-#     answer.upvote_count += 1
-#     answer.save()
-#     return JsonResponse({"upvote_count": answer.upvote_count})
-
-# @login_required
-# def add_question(request):
-#     return redirect("accounts:faq_page")
-
-# @login_required
-# def add_answer(request, question_id):
-#     return redirect("accounts:faq_page")
 
 
 @login_required
@@ -535,3 +549,5 @@ def add_question(request):
 def add_answer(request, question_id):
     # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
+
+

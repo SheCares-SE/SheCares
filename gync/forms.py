@@ -3,6 +3,8 @@ from SC.shared_models import Blog
 from .models import Appointment
 from .models import GyncProfile
 
+from .models import DoctorFeedback
+
         
 class BlogForm(forms.ModelForm):
     class Meta:
@@ -18,3 +20,13 @@ class Appointment(forms.Form):
     class Meta:
         model = Appointment
         fields = ['doctor', 'date', 'time']
+
+
+# class FeedbackForm(forms.ModelForm):
+#     class Meta:
+#         model = DoctorFeedback
+#         fields = ['rating', 'feedback']  # Fields the patient can fill
+#         widgets = {
+#             'rating': forms.NumberInput(attrs={'min': 1, 'max': 5}),  # Assuming rating is 1-5
+#             'feedback': forms.Textarea(attrs={'rows': 3}),
+#         }

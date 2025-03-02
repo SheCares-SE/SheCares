@@ -5,8 +5,70 @@ from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
 from django.http import JsonResponse
-
+from accounts.models import User  
 from django.http import HttpResponse
+from .models import DoctorFeedback
+from django.db.models import Avg
+from .models import DoctorFeedback
+from accounts.models import User
+from django.shortcuts import render, get_object_or_404
+
+
+# @login_required
+# def gynecologist_profile_view(request, doctor_id):
+#     doctor = get_object_or_404(DoctorProfile, user__id=doctor_id)
+    
+#     # Fetch feedbacks and calculate average rating
+#     feedbacks = DoctorFeedback.objects.filter(doctor=doctor.user)
+#     avg_rating = feedbacks.aggregate(Avg('rating'))['rating__avg']
+    
+#     if request.method == "POST":
+#         form = FeedbackForm(request.POST)
+#         if form.is_valid():
+#             feedback = form.save(commit=False)
+#             feedback.patient = request.user
+#             feedback.doctor = doctor.user
+#             feedback.save()
+#             return redirect('gync:gynecologist_profile', doctor_id=doctor_id)  # Reload the page after submission
+#     else:
+#         form = FeedbackForm()
+    
+#     context = {
+#         'doctor': doctor,
+#         'feedbacks': feedbacks,
+#         'avg_rating': avg_rating if avg_rating else "No ratings yet",
+#         'form': form
+#     }
+#     return render(request, 'gync/gynecologist_profile.html', context)
+# @login_required
+# def gynecologist_profile_view(request, doctor_id):
+#     # Fetch the doctor's profile using the doctor_id
+#     doctor = get_object_or_404(DoctorProfile, user__id=doctor_id)
+    
+#     # Fetch all feedbacks for this doctor and calculate the average rating
+#     feedbacks = DoctorFeedback.objects.filter(doctor=doctor.user)
+#     avg_rating = feedbacks.aggregate(Avg('rating'))['rating__avg']
+    
+#     # Handle feedback submission
+#     if request.method == "POST":
+#         form = FeedbackForm(request.POST)
+#         if form.is_valid():
+#             feedback = form.save(commit=False)
+#             feedback.patient = request.user  # The logged-in user (patient)
+#             feedback.doctor = doctor.user   # The doctor being rated
+#             feedback.save()
+#             return redirect('gync:gynecologist_profile', doctor_id=doctor_id)  # Reload the page
+#     else:
+#         form = FeedbackForm()
+    
+#     # Prepare context for the template
+#     context = {
+#         'doctor': doctor,
+#         'feedbacks': feedbacks,  # List of feedbacks to display
+#         'avg_rating': round(avg_rating, 1) if avg_rating else "No ratings yet",  # Round the average rating for display
+#         'form': form,  # Feedback form for the patient to submit
+#     }
+#     return render(request, 'gync/gynecologist_profile.html', context)
 
 @login_required
 def doctor_dashboard(request):
@@ -47,10 +109,6 @@ def blog_detail(request, blog_id):
 
 #aishna
 
-
-from django.shortcuts import render, redirect
-from django.db import connection
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def doctor_appointments_view(request):

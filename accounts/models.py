@@ -103,3 +103,16 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.text
+    
+# class DoctorFeedback(models.Model):
+#     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_as_doctor')
+#     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_as_patient')
+#     rating = models.FloatField()  # e.g., 1 to 5
+#     feedback = models.TextField(blank=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     class Meta:
+#         unique_together = ('doctor', 'patient')  # One feedback per patient per doctor
+
+#     def __str__(self):
+#         return f"Feedback for {self.doctor} by {self.patient}"
