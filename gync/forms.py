@@ -3,7 +3,7 @@ from SC.shared_models import Blog
 from .models import Appointment
 from .models import GyncProfile
 
-from .models import DoctorFeedback
+
 
         
 class BlogForm(forms.ModelForm):

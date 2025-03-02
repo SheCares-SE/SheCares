@@ -4,13 +4,13 @@ from django.db import connection
 from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
-from django.http import JsonResponse
-from accounts.models import User  
-from django.http import HttpResponse
-from .models import DoctorFeedback
-from django.db.models import Avg
-from .models import DoctorFeedback
-from accounts.models import User
+# from django.http import JsonResponse
+# from accounts.models import User  
+# from django.http import HttpResponse
+
+# from django.db.models import Avg
+
+# from accounts.models import User
 from django.shortcuts import render, get_object_or_404
 
 

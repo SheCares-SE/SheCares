@@ -2,7 +2,7 @@ from django.urls import path
 from .views import doctor_dashboard
 from . import views
 from .views import blog_list, blog_create, blog_detail 
-from .views import gynecologist_profile_view
+
 
 app_name = 'gync'  # Define the app namespace
 

@@ -10,13 +10,13 @@ class Symptom(models.Model):
     def __str__(self):
         return self.name
 
-class Doctor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_table")
-    registration_number = models.CharField(max_length=255, default="Unknown")  # Default value added
-    specialization = models.CharField(max_length=255, default="General")  # Default value added
+# class Doctor(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="doctor_table")
+#     registration_number = models.CharField(max_length=255, default="Unknown")  # Default value added
+#     specialization = models.CharField(max_length=255, default="General")  # Default value added
 
-    def __str__(self):
-        return f"{self.user.username} - {self.specialization}"
+#     def __str__(self):
+#         return f"{self.user.username} - {self.specialization}"
 
 
     

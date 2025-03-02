@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='user',
-            # name='city',
+            name='city',
         ),
         migrations.AddField(
             model_name='doctorprofile',
