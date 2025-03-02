@@ -282,55 +282,6 @@ def profile_view(request):
                                                      'form': form})
 
 #Urvashi
-# @login_required
-# def faq_page(request):
-#     if request.method == "POST":
-#         if 'question_text' in request.POST:
-#             question_text = request.POST.get("question_text")
-#             if question_text:
-#                 Question.objects.create(user=request.user, text=question_text)
-#                 messages.success(request, "Question submitted successfully!")
-#             else:
-#                 messages.error(request, "Question cannot be empty.")
-#         elif 'answer_text' in request.POST:
-#             question_id = request.POST.get("qus_id")
-#             answer_text = request.POST.get("answer_text")
-#             question = get_object_or_404(Question, qus_id=question_id)
-            
-#             if request.user.role == "doctor":
-#                 if answer_text:
-#                     Answer.objects.create(user=request.user, qus=question, text=answer_text)
-#                     messages.success(request, "Answer submitted successfully!")
-#                 else:
-#                     messages.error(request, "Answer cannot be empty.")
-#             else:
-#                 messages.error(request, "Only doctors can answer questions.")
-#         return redirect("accounts:faq_page")
-
-#     questions = Question.objects.all().order_by("-upvote_count")
-#     return render(request, "accounts/faq.html", {"questions": questions})
-
-# @login_required
-# def upvote_question(request):
-#     question = get_object_or_404(Question, qus_id=request.POST.get("qus_id"))
-#     question.upvote_count += 1
-#     question.save()
-#     return JsonResponse({"upvote_count": question.upvote_count})
-
-# @login_required
-# def upvote_answer(request):
-#     answer = get_object_or_404(Answer, ans_id=request.POST.get("ans_id"))
-#     answer.upvote_count += 1
-#     answer.save()
-#     return JsonResponse({"upvote_count": answer.upvote_count})
-
-# @login_required
-# def add_question(request):
-#     return redirect("accounts:faq_page")
-
-# @login_required
-# def add_answer(request, question_id):
-#     return redirect("accounts:faq_page")
 
 
 @login_required
