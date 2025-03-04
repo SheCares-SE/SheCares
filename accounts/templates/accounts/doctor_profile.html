@@ -1,37 +1,57 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h2>Dr. {{ username }}</h2>
-    <p>Specialization: {{ specialization }}</p>
-    <p>City: {{ city }}</p>
-    <p>Average Rating: {{ avg_rating|floatformat:1 }}/5</p>
+<body class="bg-gray-100 p-6 flex items-center justify-center min-h-screen">
+    <div class="max-w-lg w-full bg-white p-6 rounded-lg shadow-md">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-blue-700">Dr. {{ username }}</h2>
+            <p class="text-gray-500">Specialization: {{ specialization }}</p>
+            <p class="text-gray-500">City: {{ city }}</p>
+            <p class="text-gray-700 font-semibold mt-2">Average Rating: {{ avg_rating|floatformat:1 }}/5 ⭐</p>
+        </div>
 
-    <h3>Patient Reviews:</h3>
-    {% if feedback_list %}
-        <ul>
-            {% for feedback, rating, patient_name in feedback_list %}
-                <li><strong>{{ patient_name }}:</strong> {{ feedback }} ({{ rating }}/5)</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No feedback yet.</p>
-    {% endif %}
+        <hr class="my-4">
 
-    <!-- Add rating form for patients -->
-    <form method="post" action="{% url 'accounts:submit_feedback' doctor_id=doctor_id %}">
-        {% csrf_token %}
-        <label for="rating">Rate this doctor (1-5):</label>
-        <input type="number" name="rating" min="1" max="5" required>
-        
-        <label for="feedback">Feedback:</label>
-        <textarea name="feedback"></textarea>
-        
-        <button type="submit">Submit Feedback</button>
-    </form>
+        <!-- Patient Reviews -->
+        <h3 class="text-xl font-semibold text-gray-700">Patient Reviews:</h3>
+        {% if feedback_list %}
+            <ul class="mt-2 space-y-2">
+                {% for feedback, rating, patient_name in feedback_list %}
+                    <li class="bg-gray-50 p-3 rounded shadow">
+                        <p class="text-gray-700"><strong>{{ patient_name }}:</strong> {{ feedback }} ({{ rating }}/5 ⭐)</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-500 mt-2">No feedback yet.</p>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <!-- Add Rating Form -->
+        <h3 class="text-xl font-semibold text-gray-700">Rate This Doctor:</h3>
+        <form method="post" action="{% url 'accounts:submit_feedback' doctor_id=doctor_id %}" class="mt-2">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="rating" class="block text-gray-700">Rate (1-5):</label>
+                <input type="number" name="rating" min="1" max="5" required 
+                    class="mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="feedback" class="block text-gray-700">Feedback:</label>
+                <textarea name="feedback" rows="3" required
+                    class="mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <button type="submit" 
+                class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
+                Submit Feedback
+            </button>
+        </form>
+    </div>
 </body>
 </html>
