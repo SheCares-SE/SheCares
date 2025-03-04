@@ -23,7 +23,7 @@ def doctor_profile(request, doctor_id):
     with connection.cursor() as cursor:
         # Fetch doctor details
         cursor.execute("""
-            SELECT u.first_name, u.last_name, d.specialization, d.city
+            SELECT u.username, u.last_name, d.specialization, d.city
             FROM doctor_table d
             JOIN accounts_user u ON d.user_id = u.id
             WHERE d.user_id = %s
@@ -35,7 +35,7 @@ def doctor_profile(request, doctor_id):
 
         # Fetch feedback
         cursor.execute("""
-            SELECT df.feedback, df.rating, u.first_name
+            SELECT df.feedback, df.rating, u.username
             FROM doctor_feedback df
             JOIN accounts_user u ON df.patient_id = u.id
             WHERE df.doctor_id = %s
@@ -51,7 +51,7 @@ def doctor_profile(request, doctor_id):
         avg_rating = cursor.fetchone()[0]
 
     context = {
-        "first_name": doctor[0],
+        "username": doctor[0],
         "last_name": doctor[1],
         "specialization": doctor[2],
         "city": doctor[3],
