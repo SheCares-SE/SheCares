@@ -5,7 +5,7 @@ from django.contrib.auth.views import LogoutView
 from django.urls import reverse_lazy
 from patient.views import patient_dashboard  
 from gync.views import doctor_dashboard  
-from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer ,profile_view, upload_profile_picture, remove_profile_picture
+from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer ,profile_view, upload_profile_picture, remove_profile_picture, your_questions
 from .views import gynecologist_profile_view, submit_feedback
 
 app_name = 'accounts'  # Define the app namespace
@@ -40,6 +40,7 @@ urlpatterns = [
    
     path("faq/toggle_like_question/", upvote_question, name="upvote_question"),
     path("faq/toggle_like_answer/", upvote_answer, name="upvote_answer"),
+    path("your_questions/", your_questions, name="your_questions"),
     path('patient/', include('patient.urls', namespace='patient')),
     path('gync/', include('gync.urls', namespace='gync')),
 ]

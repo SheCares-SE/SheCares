@@ -685,3 +685,18 @@ def add_question(request):
 @login_required
 def add_answer(request, question_id):
     return redirect("accounts:faq_page")
+
+
+@login_required
+def your_questions(request):
+    # Questions the user asked:
+    asked_questions = Question.objects.filter(user=request.user).order_by("-created_at")
+    
+    # Questions the user answered (distinct)
+    answered_question_ids = Answer.objects.filter(user=request.user).values_list('qus__qus_id', flat=True).distinct()
+    answered_questions = Question.objects.filter(qus_id__in=answered_question_ids).order_by("-created_at")
+    
+    return render(request, "accounts/your_questions.html", {
+        "asked_questions": asked_questions,
+        "answered_questions": answered_questions,
+    })
