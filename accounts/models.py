@@ -103,7 +103,25 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class QuestionLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'question')
+
+class AnswerLike(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'answer')
     
+
 # class DoctorFeedback(models.Model):
 #     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_as_doctor')
 #     patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks_as_patient')

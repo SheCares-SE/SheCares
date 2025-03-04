@@ -16,6 +16,8 @@ from django.utils import timezone
 from django.http import HttpResponse  # Add this import
 from django.urls import reverse
 from django.http import JsonResponse
+from django.db.models import F
+
 
 def doctor_profile(request, doctor_id):
     with connection.cursor() as cursor:
@@ -469,6 +471,87 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
 
 
+#Urvashi
+
+# @login_required
+# def faq_page(request):
+#     if request.method == "POST":
+#         cursor = connection.cursor()
+#         # If a new question is submitted:
+#         if 'question_text' in request.POST:
+#             question_text = request.POST.get("question_text")
+#             if question_text:
+#                 # Insert the question using raw SQL
+#                 cursor.execute("""
+#                     INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
+#                     VALUES (%s, %s, NOW(), 0)
+#                 """, [request.user.id, question_text])
+#                 # messages.success(request, "Question submitted successfully!")
+#             else:
+#                 messages.error(request, "Question cannot be empty.")
+#         # If an answer is submitted:
+#         elif 'answer_text' in request.POST:
+#             question_id = request.POST.get("qus_id")
+#             answer_text = request.POST.get("answer_text")
+#             # Verify that the question exists
+#             cursor.execute("SELECT qus_id FROM accounts_question WHERE qus_id = %s", [question_id])
+#             if cursor.fetchone() is None:
+#                 messages.error(request, "Question not found.")
+#             else:
+#                 if request.user.role == "doctor":
+#                     if answer_text:
+#                         cursor.execute("""
+#                             INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
+#                             VALUES (%s, %s, %s, NOW(), 0)
+#                         """, [question_id, request.user.id, answer_text])
+#                         # messages.success(request, "Answer submitted successfully!")
+#                     else:
+#                         messages.error(request, "Answer cannot be empty.")
+#                 else:
+#                     messages.error(request, "Only doctors can answer questions.")
+#         return redirect("accounts:faq_page")
+    
+#     # For GET requests, fetch questions with a raw SQL query.
+#     # Using the model's raw() method returns a RawQuerySet that you can iterate in the template.
+#     questions = Question.objects.raw("""
+#         SELECT * FROM accounts_question
+#         ORDER BY upvote_count DESC, created_at DESC
+#     """)
+#     return render(request, "accounts/faq.html", {"questions": questions})
+
+# @login_required
+# def upvote_question(request):
+#     cursor = connection.cursor()
+#     qus_id = request.POST.get("qus_id")
+#     cursor.execute("""
+#         UPDATE accounts_question SET upvote_count = upvote_count + 1
+#         WHERE qus_id = %s
+#     """, [qus_id])
+#     cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
+#     new_count = cursor.fetchone()[0]
+#     return JsonResponse({"upvote_count": new_count})
+
+# @login_required
+# def upvote_answer(request):
+#     cursor = connection.cursor()
+#     ans_id = request.POST.get("ans_id")
+#     cursor.execute("""
+#         UPDATE accounts_answer SET upvote_count = upvote_count + 1
+#         WHERE ans_id = %s
+#     """, [ans_id])
+#     cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
+#     new_count = cursor.fetchone()[0]
+#     return JsonResponse({"upvote_count": new_count})
+
+# @login_required
+# def add_question(request):
+#     # Redirect to faq_page since form submission is handled there.
+#     return redirect("accounts:faq_page")
+
+# @login_required
+# def add_answer(request, question_id):
+#     # Redirect to faq_page since form submission is handled there.
+#     return redirect("accounts:faq_page")
 
 @login_required
 def faq_page(request):
@@ -478,38 +561,37 @@ def faq_page(request):
         if 'question_text' in request.POST:
             question_text = request.POST.get("question_text")
             if question_text:
-                # Insert the question using raw SQL
                 cursor.execute("""
                     INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
                     VALUES (%s, %s, NOW(), 0)
                 """, [request.user.id, question_text])
-                # messages.success(request, "Question submitted successfully!")
+                messages.success(request, "Question submitted successfully!")
             else:
                 messages.error(request, "Question cannot be empty.")
         # If an answer is submitted:
         elif 'answer_text' in request.POST:
             question_id = request.POST.get("qus_id")
             answer_text = request.POST.get("answer_text")
-            # Verify that the question exists
+            # Check that the question exists:
             cursor.execute("SELECT qus_id FROM accounts_question WHERE qus_id = %s", [question_id])
             if cursor.fetchone() is None:
                 messages.error(request, "Question not found.")
             else:
-                if request.user.role == "doctor":
+                # Ensure only gynecologists can answer:
+                if request.user.role == "gynecologist":
                     if answer_text:
                         cursor.execute("""
                             INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
                             VALUES (%s, %s, %s, NOW(), 0)
                         """, [question_id, request.user.id, answer_text])
-                        # messages.success(request, "Answer submitted successfully!")
+                        messages.success(request, "Answer submitted successfully!")
                     else:
                         messages.error(request, "Answer cannot be empty.")
                 else:
-                    messages.error(request, "Only doctors can answer questions.")
+                    messages.error(request, "Only gynecologists can answer questions.")
         return redirect("accounts:faq_page")
     
-    # For GET requests, fetch questions with a raw SQL query.
-    # Using the model's raw() method returns a RawQuerySet that you can iterate in the template.
+    # For GET requests, fetch questions using a raw SQL query.
     questions = Question.objects.raw("""
         SELECT * FROM accounts_question
         ORDER BY upvote_count DESC, created_at DESC
@@ -517,37 +599,89 @@ def faq_page(request):
     return render(request, "accounts/faq.html", {"questions": questions})
 
 @login_required
-def upvote_question(request):
-    cursor = connection.cursor()
+def  upvote_question(request):
+    user_id = request.user.id
     qus_id = request.POST.get("qus_id")
-    cursor.execute("""
-        UPDATE accounts_question SET upvote_count = upvote_count + 1
-        WHERE qus_id = %s
-    """, [qus_id])
-    cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
-    new_count = cursor.fetchone()[0]
+    with connection.cursor() as cursor:
+        # Check if the like already exists
+        cursor.execute("""
+            SELECT id FROM accounts_questionlike
+            WHERE user_id = %s AND question_id = %s
+        """, [user_id, qus_id])
+        like_exists = cursor.fetchone()
+        if like_exists:
+            # Remove like
+            cursor.execute("""
+                DELETE FROM accounts_questionlike
+                WHERE user_id = %s AND question_id = %s
+            """, [user_id, qus_id])
+            cursor.execute("""
+                UPDATE accounts_question
+                SET upvote_count = upvote_count - 1
+                WHERE qus_id = %s
+            """, [qus_id])
+        else:
+            # Add like
+            cursor.execute("""
+                INSERT INTO accounts_questionlike (user_id, question_id, created_at)
+                VALUES (%s, %s, NOW())
+            """, [user_id, qus_id])
+            cursor.execute("""
+                UPDATE accounts_question
+                SET upvote_count = upvote_count + 1
+                WHERE qus_id = %s
+            """, [qus_id])
+        cursor.execute("""
+            SELECT upvote_count FROM accounts_question
+            WHERE qus_id = %s
+        """, [qus_id])
+        new_count = cursor.fetchone()[0]
     return JsonResponse({"upvote_count": new_count})
 
 @login_required
 def upvote_answer(request):
-    cursor = connection.cursor()
+    user_id = request.user.id
     ans_id = request.POST.get("ans_id")
-    cursor.execute("""
-        UPDATE accounts_answer SET upvote_count = upvote_count + 1
-        WHERE ans_id = %s
-    """, [ans_id])
-    cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
-    new_count = cursor.fetchone()[0]
+    with connection.cursor() as cursor:
+        # Check if the like exists
+        cursor.execute("""
+            SELECT id FROM accounts_answerlike
+            WHERE user_id = %s AND answer_id = %s
+        """, [user_id, ans_id])
+        like_exists = cursor.fetchone()
+        if like_exists:
+            # Remove like
+            cursor.execute("""
+                DELETE FROM accounts_answerlike
+                WHERE user_id = %s AND answer_id = %s
+            """, [user_id, ans_id])
+            cursor.execute("""
+                UPDATE accounts_answer
+                SET upvote_count = upvote_count - 1
+                WHERE ans_id = %s
+            """, [ans_id])
+        else:
+            # Add like
+            cursor.execute("""
+                INSERT INTO accounts_answerlike (user_id, answer_id, created_at)
+                VALUES (%s, %s, NOW())
+            """, [user_id, ans_id])
+            cursor.execute("""
+                UPDATE accounts_answer
+                SET upvote_count = upvote_count + 1
+                WHERE ans_id = %s
+            """, [ans_id])
+        cursor.execute("""
+            SELECT upvote_count FROM accounts_answer
+            WHERE ans_id = %s
+        """, [ans_id])
+        new_count = cursor.fetchone()[0]
     return JsonResponse({"upvote_count": new_count})
 
 @login_required
 def add_question(request):
-    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
 
 @login_required
 def add_answer(request, question_id):
-    # Redirect to faq_page since form submission is handled there.
     return redirect("accounts:faq_page")
-
-

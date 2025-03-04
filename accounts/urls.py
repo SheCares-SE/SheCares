@@ -35,10 +35,11 @@ urlpatterns = [
     path('faq/add_question/', add_question, name='add_question'),
     path('faq/add_answer/<int:question_id>/', add_answer, name='add_answer'),
 
-path("faq/like_question/", upvote_question, name="upvote_question"),
-    path("faq/like_answer/", upvote_answer, name="upvote_answer"),
+    # path("faq/like_question/", upvote_question, name="upvote_question"),
+    # path("faq/like_answer/", upvote_answer, name="upvote_answer"),
    
-
+    path("faq/toggle_like_question/", upvote_question, name="upvote_question"),
+    path("faq/toggle_like_answer/", upvote_answer, name="upvote_answer"),
     path('patient/', include('patient.urls', namespace='patient')),
     path('gync/', include('gync.urls', namespace='gync')),
 ]
