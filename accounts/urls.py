@@ -28,6 +28,7 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('login/', login_view, name='login'),
     path('select-role/', select_role_view, name='select_role'),
+    
     path('signup/<str:role>/', signup_view, name='signup'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('accounts:login')), name='logout'),
     # path('recommend-doctor/', recommend_doctor_view, name='recommend_doctor'),

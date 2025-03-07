@@ -6,39 +6,145 @@
   <title>Login - SheCares</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Dark-to-Light Gradient Background */
+    body {
+      background: linear-gradient(135deg, #4b0082, #a6c1ee);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Glassmorphism Card */
+    .glass {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* Title Styling */
+    .glass h2 {
+      color: #fff;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    /* Label Styling */
+    label {
+      color: #ffffff;
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+
+    /* Input Styling */
+    .custom-input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: 0.3s ease-in-out;
+    }
+
+    /* Placeholder Color */
+    .custom-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: normal;
+    }
+
+    /* Focus Effect */
+    .custom-input:focus {
+      outline: none;
+      border: 2px solid #a6c1ee;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Custom Button */
+    .custom-btn {
+      background: linear-gradient(to right, #6a0dad, #9b30ff);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 1rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1.1rem;
+    }
+
+    .custom-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
+      background: linear-gradient(to right, #50008c, #8a2be2);
+    }
+
+    /* Error Messages */
+    .error-message {
+      background: rgba(255, 0, 0, 0.3);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex items-center justify-center">
-  <div class="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
-    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Welcome to SheCares</h2>
+<body>
+
+  <div class="glass">
+    <h2>Welcome to SheCares</h2>
     <form method="POST" action="{% url 'accounts:login' %}" class="space-y-4">
       {% csrf_token %}
+
       <div>
-        <label for="username" class="block text-gray-700 font-semibold mb-2">Username</label>
-        <input type="text" name="username" id="username" required
-               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required class="custom-input">
       </div>
+
       <div>
-        <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
-        <input type="password" name="password" id="password" required
-               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required class="custom-input">
       </div>
-      <div>
-        <button type="submit"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-          Login
-        </button>
+
+      <button type="submit" class="custom-btn">Login</button>
+
+      <div class="text-center mt-4">
+        <p class="text-white">Don't have an account? 
+          <a href="{% url 'accounts:select_role' %}" class="text-blue-300 hover:underline font-semibold">
+            Sign up here
+          </a>
+        </p>
       </div>
+      
     </form>
+
     {% if messages %}
       <div class="mt-4 space-y-2">
         {% for message in messages %}
-          <div class="bg-red-100 text-red-700 p-2 rounded">
+          <div class="error-message">
             {{ message }}
           </div>
         {% endfor %}
       </div>
     {% endif %}
   </div>
+
   <script type="text/javascript">
     {% if messages %}
       {% for message in messages %}
@@ -48,5 +154,6 @@
       {% endfor %}
     {% endif %}
   </script>
+
 </body>
 </html>

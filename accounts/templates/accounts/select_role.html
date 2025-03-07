@@ -1,6 +1,74 @@
-<form method="post">
-    {% csrf_token %}
-    <label>Select your role:</label><br>
-    {{ form.as_p }}
-    <button type="submit">Next</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Role - SheCares</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Dark-to-Light Gradient Background */
+    body {
+      background: linear-gradient(135deg, #4b0082, #a6c1ee);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Glassmorphism Card */
+    .glass {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* Darker Button */
+    .custom-btn {
+      background: linear-gradient(to right, #6a0dad, #9b30ff);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .custom-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
+      background: linear-gradient(to right, #50008c, #8a2be2);
+    }
+
+    /* Improved Text Visibility */
+    .glass h2 {
+      color: #fff;
+    }
+
+    .glass label {
+      color: #fff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glass text-center">
+    <h2 class="text-2xl font-bold mb-4">Select Your Role</h2>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      
+      <div class="text-white text-lg">
+        {{ form.as_p }}
+      </div>
+
+      <button type="submit" class="custom-btn w-full">Next</button>
+    </form>
+  </div>
+
+</body>
+</html>
