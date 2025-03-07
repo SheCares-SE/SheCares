@@ -17,7 +17,7 @@
     <!-- Profile Picture Section -->
     <div class="text-center">
       {% if user.profile_picture %}
-        <img src="{{ user.profile_picture.url }}" class="w-32 h-32 rounded-full mx-auto border border-gray-300 shadow-md">
+        <img src="{{ user.profile_picture.url}}" class="w-32 h-32 rounded-full mx-auto border border-gray-300 shadow-md">
         <form method="post" action="{% url 'accounts:remove_profile_picture' %}" class="mt-2">
           {% csrf_token %}
           <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
@@ -70,84 +70,118 @@
   }
 </script>
 
-
-        {% comment %} <!-- Selected File Name Display -->
-        <p id="fileName" class="text-center text-gray-500 text-sm mt-2">No file chosen</p>
-      </div> {% endcomment %}
-
-      {% comment %} <div class="flex justify-center mt-4">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition w-1/2">
-          Upload 
-        </button>
-      </div> {% endcomment %}
-      
       
       </button>
     </form>
 
-    <!-- Profile Details -->
-    {% if profile %}
-      <div class="mt-6 p-4 rounded-lg shadow-md 
-                  {% if request.user.role == 'patient' %} bg-blue-50 border-l-4 border-blue-400 {% else %} bg-green-50 border-l-4 border-green-400 {% endif %}">
+   <!-- Profile Details -->
+   {% if profile %}
+   <div class="mt-6 p-4 rounded-lg shadow-md
+               {% if request.user.role == 'patient' %} bg-blue-50 border-l-4 border-blue-400 {% else %} bg-green-50 border-l-4 border-green-400 {% endif %}">
 
-        <h2 class="text-xl font-semibold 
-                   {% if request.user.role == 'patient' %} text-blue-600 {% else %} text-green-600 {% endif %}">
-          Details
-        </h2>
+     <h2 class="text-xl font-semibold 
+                {% if request.user.role == 'patient' %} text-blue-600 {% else %} text-green-600 {% endif %}">
+       Details
+     </h2>
 
-        <p class="text-gray-700 mt-2"><strong>Username:</strong> {{ profile.username }}</p>
+     <p class="text-gray-700 mt-2"><strong>Username:</strong> {{ profile.username }}</p>
 
-        {% if request.user.role == 'patient' %}
-          <p class="text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
-          
-        {% elif request.user.role == 'doctor' %}
-        <p><strong>Average Patient Rating:</strong> {{ profile.avg_rating }} ⭐</p>
-          <p class="text-gray-700"><strong>Registration No.:</strong> {{ profile.registration_number }}</p>
-          <p class="text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
-           {% comment %} <!-- Average Rating Section -->
-<div class="mt-6 p-4 rounded-lg shadow-md bg-yellow-50 border-l-4 border-yellow-400">
-  <h2 class="text-xl font-semibold text-yellow-600">Doctor Rating</h2>
-  <p class="text-gray-700 mt-2"><strong>Average Rating:</strong> {{ profile.avg_rating }} ⭐</p>
+     {% if request.user.role == 'patient' %}
+       <p class="text-gray-700"><strong>Age:</strong> {{ profile.age }}</p>
+     {% elif request.user.role == 'doctor' %}
+       <p class="text-gray-700"><strong>Registration No.:</strong> {{ profile.registration_number }}</p>
+       <p class="text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
+       <p class="text-gray-700"><strong>Average Rating:</strong> {{ profile.avg_rating }} ⭐</p>
+     {% endif %}
+   </div>
+ {% else %}
+   <p class="text-center text-gray-500 mt-4">No profile data available.</p>
+ {% endif %}
+ <div class="text-center mt-4">
+  {% if request.user.role == 'doctor' %}
+    <a href="{% url 'accounts:edit_profile' %}?role=doctor" 
+       class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
+       Edit Profile
+    </a>
+  {% else %}
+    <a href="{% url 'accounts:edit_profile' %}?role=patient" 
+       class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">
+       Edit Profile
+    </a>
+  {% endif %}
 </div>
 
-<!-- Feedback List -->
-<div class="mt-6 p-4 rounded-lg shadow-md bg-gray-50 border-l-4 border-gray-400">
-  <h2 class="text-xl font-semibold text-gray-600">Patient Feedback</h2>
+ <!-- Feedback Button -->
+ {% if request.user.role == 'doctor' %}
+ <div class="text-center mt-4">
+   <button onclick="toggleFeedback()" 
+       class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition w-full">
+       View Feedback & Ratings
+   </button>
+ </div>
+
+ {% comment %} <!-- Feedback Section (Initially Hidden) -->
+ <div id="feedbackSection" class="mt-4 hidden">
+   <h3 class="text-xl font-semibold text-gray-700 text-center">Patient Reviews:</h3>
+
+  {% if feedback_list %}
+       <ul class="mt-2 space-y-2">
+           {% for feedback, rating, patient_name in formatted_feedback_list %}
+               <li class="bg-gray-50 p-3 rounded shadow">
+                   <p class="text-gray-700 text-sm">
+                       <strong>{{ patient_name }}:</strong> {{ feedback }} ({{ rating }}/5 ⭐)
+                   </p>
+               </li>
+           {% endfor %}
+       </ul>
+  {% else %}
+       <p class="text-gray-500 mt-2 text-center">No feedback yet.</p>
+   {% endif %}
+ </div>
+ {% endif %}
+</div> {% endcomment %}
+ <!-- Feedback Section (Initially Hidden) -->
+ <div id="feedbackSection" class="mt-4 hidden">
+  <h3 class="text-xl font-semibold text-gray-700 text-center">Patient Reviews:</h3>
+
   {% if profile.feedback_list %}
     <ul class="mt-2 space-y-2">
-      {% for feedback, rating, patient_id in profile.feedback_list %}
-        <li class="bg-white p-3 rounded shadow">
-          <p class="text-gray-700"><strong>Rating:</strong> {{ rating }} ⭐</p>
-          <p class="text-gray-500"><strong>Feedback:</strong> {{ feedback }}</p>
-          <p class="text-sm text-gray-400">Patient ID: {{ patient_id }}</p>
+      {% for feedback in profile.feedback_list %}
+        <li class="bg-gray-50 p-3 rounded shadow">
+          <p class="text-gray-700 text-sm">
+            <strong>{{ feedback.patient_name }}:</strong> {{ feedback.feedback }} ({{ feedback.rating }}/5 ⭐)
+          </p>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p class="text-gray-500">No feedback yet.</p>
+    <p class="text-gray-500 mt-2 text-center">No feedback yet.</p>
   {% endif %}
-</div> {% endcomment %}
-        {% endif %}
-      </div>
-    {% else %}
-      <p class="text-center text-gray-500 mt-4">No profile data available.</p>
-    {% endif %}
+</div>
+{% endif %}
+</div>
+<!-- JavaScript -->
+<script>
+ function updateFileName() {
+   const fileInput = document.getElementById('fileInput');
+   const fileName = document.getElementById('fileName');
 
-  </div>
- 
+   if (fileInput.files.length > 0) {
+     fileName.textContent = "Selected file: " + fileInput.files[0].name;
+     fileName.classList.remove("text-gray-500");
+     fileName.classList.add("text-green-600", "font-semibold");
+   } else {
+     fileName.textContent = "No file chosen";
+     fileName.classList.remove("text-green-600", "font-semibold");
+     fileName.classList.add("text-gray-500");
+   }
+ }
 
-
-  <!-- JavaScript for File Name Display -->
-  <script>
-    function updateFileName() {
-      const fileInput = document.getElementById('fileInput');
-      const fileName = document.getElementById('fileName');
-
-      if (fileInput.files.length > 0) {
-        fileName.textContent = fileInput.files[0].name;
-      } 
-    }
-  </script>
+ function toggleFeedback() {
+   const feedbackSection = document.getElementById("feedbackSection");
+   feedbackSection.classList.toggle("hidden");
+ }
+</script>
 
 </body>
 </html>

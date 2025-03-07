@@ -1,5 +1,8 @@
+import os
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import login, authenticate,get_user_model
+from django.db import connection
+from SC import settings
 from .forms import RoleSelectionForm, DoctorSignupForm, PatientSignupForm, ProfilePictureForm
 from .models import User, PatientProfile, DoctorProfile
 from gync.models import DoctorProfile # Fetch doctor data
@@ -17,6 +20,121 @@ from django.http import HttpResponse  # Add this import
 from django.urls import reverse
 from django.http import JsonResponse
 from django.db.models import F
+from .forms import ProfileUpdateForm
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.db import connection
+from django.contrib import messages
+from .forms import ProfileUpdateForm
+from django.db import transaction
+
+@login_required
+def edit_profile(request):
+    user = request.user
+    user_type = None
+    initial_data = {}
+
+    # Fetch user-specific details
+    if user.role == 'doctor':  # If user is a doctor
+        user_type = 'doctor'
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT d.registration_number, d.specialization,a.username
+                FROM doctor_table d JOIN accounts_user a ON a.id=d.user_id
+                WHERE d.user_id = %s
+            """, [user.id])
+            row = cursor.fetchone()
+            if row:
+                initial_data = {
+                    'registration_number': row[0],
+                    'specialization': row[1],
+                    'username':row[2]
+                }
+
+    elif user.role == 'patient':  # If user is a patient
+        user_type = 'patient'
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT age,username
+                FROM accounts_user 
+                WHERE id = %s
+            """, [user.id])
+            row = cursor.fetchone()
+            if row:
+                initial_data['age'] = row[0]
+
+    # Fetch existing profile picture
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT profile_picture 
+            FROM accounts_user 
+            WHERE id = %s
+        """, [user.id])
+        row = cursor.fetchone()
+        if row and row[0]:
+            initial_data['profile_picture'] = row[0]  
+
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, user_type=user_type)
+        if form.is_valid():
+            profile_picture = form.cleaned_data.get('profile_picture')
+
+            # Update profile picture only if a new one is uploaded
+            if profile_picture:
+                file_path = os.path.join(settings.MEDIA_ROOT, profile_picture.name)
+                profile_picture_path = f"profile_pictures/{profile_picture.name}"  # Adjust path as needed
+                print(f"Updating profile picture: {profile_picture.name}")
+                # with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE accounts_user
+                        SET profile_picture = %s
+                        WHERE id = %s
+                    """, [profile_picture_path, user.id])  # Store filename/path instead of file object
+
+            # Update doctor_table if user is a doctor
+            if user_type == 'doctor':
+                registration_number = form.cleaned_data.get('registration_number')
+                specialization = form.cleaned_data.get('specialization')
+                username = form.cleaned_data.get('username')
+                # with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE doctor_table 
+                        SET registration_number = %s, specialization = %s
+                        WHERE user_id = %s
+                     """, [registration_number, specialization, user.id])
+
+    # Update accounts_user (username)
+                    cursor.execute("""
+                            UPDATE accounts_user
+                            SET username = %s
+                            WHERE id = %s
+                    """, [username, user.id])
+
+            # Update patient_table if user is a patient
+            elif user_type == 'patient':
+                age = form.cleaned_data.get('age')
+                username = form.cleaned_data.get('username')
+            # with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE accounts_user
+                        SET age = %s, username=%s
+                        WHERE id = %s
+                    """, [age,username, user.id])
+                    connection.commit()
+            # user.save()
+            # messages.success(request, "Profile updated successfully!")
+            return redirect('accounts:profile')  # Redirect to the profile page
+
+        else:
+            messages.error(request, "Error updating profile. Please check your inputs.")
+
+    else:
+        form = ProfileUpdateForm(user_type=user_type, initial=initial_data)
+
+    return render(request, 'accounts/edit_profile.html', {'form': form, 'user_type': user_type})
 
 
 def doctor_profile(request, doctor_id):
@@ -61,58 +179,7 @@ def doctor_profile(request, doctor_id):
     }
     return render(request, 'accounts/doctor_profile.html', context)
 
-#Aesha
-# def gynecologist_profile_view(request, doctor_id):
-#     from gync.models import Doctor
-    
-#     doctor = get_object_or_404(Doctor, id=doctor_id)
-    
-    
-#     with connection.cursor() as cursor:
-#         cursor.execute("""
-#             SELECT au.id, au.username, dt.specialization 
-#             FROM accounts_user au
-#             JOIN doctor_table dt ON au.id = dt.user_id
-#             WHERE au.role = 'doctor' AND au.id = %s
-#         """, [doctor_id])
-#         row = cursor.fetchone()  # Change variable name
 
-
-#         cursor.execute("""
-#             SELECT df.feedback, df.rating, au.first_name AS patient_name 
-#             FROM doctor_feedback df
-#             JOIN accounts_user au ON df.patient_id = au.id
-#             WHERE df.doctor_id = %s
-#             ORDER BY df.created_at DESC;
-#         """, [doctor_id])
-#         feedback_list = cursor.fetchall()
-
-#         cursor.execute("""
-#             SELECT ROUND(AVG(rating), 1) AS avg_rating
-#             FROM doctor_feedback
-#             WHERE doctor_id = %s
-#             GROUP BY doctor_id;
-#         """, [doctor_id])
-#         avg_rating = cursor.fetchone()
-
-#     if not doctor:
-#         return render(request, '404.html', status=404)
-
-#     doctor_details = {
-#         "id": row[0],
-#         # "first_name": doctor[1],
-#         "username": row[1],
-#         "specialization": row[2],
-#         "avg_rating": avg_rating[0] if avg_rating else "No ratings yet",
-#         "feedback_list": feedback_list
-#     }
-
-#     context = {
-#         'doctor': doctor_details,
-#         'doctor_id': doctor_id,  # Explicitly ensure doctor_id is passed
-#     }
-
-#     return render(request, 'accounts/doctor_profile.html', context)
 
 def gynecologist_profile_view(request, doctor_id):
     from gync.models import Doctor
@@ -251,21 +318,21 @@ def login_view(request):
 
     return render(request, 'accounts/login.html')
 
-def edit_patient_profile(request):
-    """Handle editing of a patient's profile"""
+# def edit_patient_profile(request):
+#     """Handle editing of a patient's profile"""
 
-    profile, created = PatientProfile.objects.get_or_create(user=request.user)
+#     profile, created = PatientProfile.objects.get_or_create(user=request.user)
 
-    if request.method == 'POST':
-        form = PatientSignupForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect('profile')
+#     if request.method == 'POST':
+#         form = PatientSignupForm(request.POST, instance=profile)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('profile')
 
-    else:
-        form = PatientSignupForm(instance=profile)
+#     else:
+#         form = PatientSignupForm(instance=profile)
 
-    return render(request, 'accounts/edit_patient_profile.html', {'form': form})
+#     return render(request, 'accounts/edit_patient_profile.html', {'form': form})
 
 #aishna
 def select_role_view(request):
@@ -408,10 +475,138 @@ def signup_view(request, role):
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
 
 
+# def profile_view(request):
+#     """View to render the profile page based on user role using SQL queries."""
+#     user = request.user  # Get the logged-in user
+#     profile_data = {}
+#     feedback_list = []
+
+#     with connection.cursor() as cursor:
+#         if user.role == 'patient':
+#             # Fetch patient details
+#             cursor.execute("""
+#                 SELECT username, age, role, profile_picture 
+#                 FROM accounts_user
+#                 WHERE id = %s
+#             """, [user.id])
+#             row = cursor.fetchone()
+#             if row:
+#                 profile_data = {
+#                     "profile_picture": row[3] if row[3] else None,
+#                     "username": row[0],
+#                     "age": row[1],
+#                     "role": row[2],
+#                 }
+#         elif user.role == 'doctor':
+#             # Fetch doctor details
+#             cursor.execute("""
+#                 SELECT d.registration_number, d.specialization, u.username, u.profile_picture
+#                 FROM doctor_table d
+#                 INNER JOIN accounts_user u ON d.user_id = u.id
+#                 WHERE d.user_id = %s
+#             """, [user.id])
+#             row = cursor.fetchone()
+#             if row:
+#                 profile_data = {
+#                     "profile_picture": row[3] if row[3] else None,
+#                     "username": row[2],
+#                     "registration_number": row[0],
+#                     "specialization": row[1],
+#                 }
+            
+
+#             # Fetch average rating
+#             cursor.execute("""
+#                 SELECT ROUND(AVG(rating),1) AS avg_rating
+#                 FROM doctor_feedback
+#                 WHERE doctor_id = %s
+#                 GROUP BY doctor_id;
+#             """, [user.id])
+#             avg_rating = cursor.fetchone()
+#             profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
+
+#             # Fetch feedback
+#             cursor.execute("""
+#                 SELECT feedback, rating, patient_id
+#                 FROM doctor_feedback
+#                 WHERE doctor_id = %s
+#                 ORDER BY created_at DESC;
+#             """, [user.id])
+#             feedback_list = cursor.fetchall()
+#             profile_data["feedback_list"] = feedback_list
+
+#     form = ProfilePictureForm()
+
+#     return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
+# def profile_view(request):
+    # """View to render the profile page based on user role using SQL queries."""
+    # user = request.user  # Get the logged-in user
+    # profile_data = {}
+    # feedback_list = []
+
+    # with connection.cursor() as cursor:
+    #     if user.role == 'patient':
+    #         # Fetch patient details
+    #         cursor.execute("""
+    #             SELECT username, age, role, profile_picture 
+    #             FROM accounts_user
+    #             WHERE id = %s
+    #         """, [user.id])
+    #         row = cursor.fetchone()
+    #         if row:
+    #             profile_data = {
+    #                 "profile_picture": row[3] if row[3] else None,
+    #                 "username": row[0],
+    #                 "age": row[1],
+    #                 "role": row[2],
+    #             }
+    #     elif user.role == 'doctor':
+    #         # Fetch doctor details
+    #         cursor.execute("""
+    #             SELECT d.registration_number, d.specialization, u.username, u.profile_picture
+    #             FROM doctor_table d
+    #             INNER JOIN accounts_user u ON d.user_id = u.id
+    #             WHERE d.user_id = %s
+    #         """, [user.id])
+    #         row = cursor.fetchone()
+    #         if row:
+    #             profile_data = {
+    #                 "profile_picture": row[3] if row[3] else None,
+    #                 "username": row[2],
+    #                 "registration_number": row[0],
+    #                 "specialization": row[1],
+    #             }
+
+    #         # Fetch average rating
+    #         cursor.execute("""
+    #             SELECT ROUND(AVG(rating),1) AS avg_rating
+    #             FROM doctor_feedback
+    #             WHERE doctor_id = %s
+    #             GROUP BY doctor_id;
+    #         """, [user.id])
+    #         avg_rating = cursor.fetchone()
+    #         profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
+
+    #         # Fetch feedback with patient names
+    #         cursor.execute("""
+    #             SELECT df.feedback, df.rating, au.username
+    #             FROM doctor_feedback df
+    #             JOIN accounts_user au ON df.patient_id = au.id
+    #             WHERE df.doctor_id = %s
+    #             ORDER BY df.created_at DESC;
+    #         """, [user.id])
+    #         feedback_list = cursor.fetchall()
+    #         profile_data["feedback_list"] = feedback_list
+
+    # form = ProfilePictureForm()
+
+    # return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form, 'feedback_list': feedback_list})
+@login_required
 def profile_view(request):
     """View to render the profile page based on user role using SQL queries."""
     user = request.user  # Get the logged-in user
     profile_data = {}
+    feedback_list = []
 
     with connection.cursor() as cursor:
         if user.role == 'patient':
@@ -425,10 +620,11 @@ def profile_view(request):
             if row:
                 profile_data = {
                     "profile_picture": row[3] if row[3] else None,
-                    "username": row[0],
+                    "username": row[0],  # Keeping username as per your schema
                     "age": row[1],
                     "role": row[2],
                 }
+
         elif user.role == 'doctor':
             # Fetch doctor details
             cursor.execute("""
@@ -438,10 +634,11 @@ def profile_view(request):
                 WHERE d.user_id = %s
             """, [user.id])
             row = cursor.fetchone()
+            print("Doctor Profile Data:", row)
             if row:
                 profile_data = {
                     "profile_picture": row[3] if row[3] else None,
-                    "username": row[2],
+                    "username": row[2],  # Keeping username as per your schema
                     "registration_number": row[0],
                     "specialization": row[1],
                 }
@@ -451,20 +648,53 @@ def profile_view(request):
                 SELECT ROUND(AVG(rating),1) AS avg_rating
                 FROM doctor_feedback
                 WHERE doctor_id = %s
-                GROUP BY doctor_id;
             """, [user.id])
             avg_rating = cursor.fetchone()
             profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-
             # Fetch feedback
+            # cursor.execute("""
+            #     SELECT feedback, rating, patient_id
+            #     FROM doctor_feedback
+            #     WHERE doctor_id = %s
+            #     ORDER BY created_at DESC;
+            # """, [user.id])
+            # feedback_list = cursor.fetchall()
+            # profile_data["feedback_list"] = feedback_list
+            # # # Fetch feedback with patient names
+            # cursor.execute("""
+            #     SELECT df.feedback, df.rating, au.username
+            #     FROM doctor_feedback df
+            #     JOIN accounts_user au ON df.patient_id = au.id
+            #     WHERE df.doctor_id = %s
+            #     ORDER BY df.created_at DESC;
+            # """, [user.id])
+            # formatted_feedback_list = cursor.fetchall()
+
+            # # Formatting feedback for easier use in templates
+            # formatted_feedback_list = [
+            #     {
+            #         "feedback": fb[0],
+            #         "rating": fb[1],
+            #         "patient_name": fb[2]  # Using `username`
+            #     } for fb in feedback_list
+            # ]
+            # profile_data["feedback_list"] = formatted_feedback_list
+
             cursor.execute("""
-                SELECT feedback, rating, patient_id
-                FROM doctor_feedback
-                WHERE doctor_id = %s
-                ORDER BY created_at DESC;
+                SELECT df.feedback, df.rating, au.username
+                FROM doctor_feedback df
+                JOIN accounts_user au ON df.patient_id = au.id
+                WHERE df.doctor_id = %s
+                ORDER BY df.created_at DESC;
             """, [user.id])
-            feedback_list = cursor.fetchall()
-            profile_data["feedback_list"] = feedback_list
+            formatted_feedback_list = [
+                {
+                    "feedback": row[0],
+                    "rating": row[1],
+                    "patient_name": row[2]
+                } for row in cursor.fetchall()
+            ]
+            profile_data["feedback_list"] = formatted_feedback_list
 
     form = ProfilePictureForm()
 

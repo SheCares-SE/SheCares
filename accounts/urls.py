@@ -7,10 +7,13 @@ from patient.views import patient_dashboard
 from gync.views import doctor_dashboard  
 from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer ,profile_view, upload_profile_picture, remove_profile_picture, your_questions
 from .views import gynecologist_profile_view, submit_feedback
+from .views import edit_profile
 
 app_name = 'accounts'  # Define the app namespace
 
 urlpatterns = [
+    path('profile/', views.profile_view, name='profile_view'),
+    path('edit-profile/', edit_profile, name='edit_profile'),
     path('doctor/<int:doctor_id>/', views.doctor_profile, name='doctor_profile'),
     path('doctor/<int:doctor_id>/feedback/', views.submit_feedback, name='submit_feedback'),
     # path('doctor/<int:doctor_id>/', views.profile_view, name='doctor_profile'),
