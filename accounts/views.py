@@ -321,21 +321,7 @@ def login_view(request):
 
     return render(request, 'accounts/login.html')
 
-# def edit_patient_profile(request):
-#     """Handle editing of a patient's profile"""
 
-#     profile, created = PatientProfile.objects.get_or_create(user=request.user)
-
-#     if request.method == 'POST':
-#         form = PatientSignupForm(request.POST, instance=profile)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('profile')
-
-#     else:
-#         form = PatientSignupForm(instance=profile)
-
-#     return render(request, 'accounts/edit_patient_profile.html', {'form': form})
 
 #aishna
 def select_role_view(request):
@@ -478,132 +464,7 @@ def signup_view(request, role):
     return render(request, 'accounts/signup.html', {'form': form, 'role': role})
 
 
-# def profile_view(request):
-#     """View to render the profile page based on user role using SQL queries."""
-#     user = request.user  # Get the logged-in user
-#     profile_data = {}
-#     feedback_list = []
 
-#     with connection.cursor() as cursor:
-#         if user.role == 'patient':
-#             # Fetch patient details
-#             cursor.execute("""
-#                 SELECT username, age, role, profile_picture 
-#                 FROM accounts_user
-#                 WHERE id = %s
-#             """, [user.id])
-#             row = cursor.fetchone()
-#             if row:
-#                 profile_data = {
-#                     "profile_picture": row[3] if row[3] else None,
-#                     "username": row[0],
-#                     "age": row[1],
-#                     "role": row[2],
-#                 }
-#         elif user.role == 'doctor':
-#             # Fetch doctor details
-#             cursor.execute("""
-#                 SELECT d.registration_number, d.specialization, u.username, u.profile_picture
-#                 FROM doctor_table d
-#                 INNER JOIN accounts_user u ON d.user_id = u.id
-#                 WHERE d.user_id = %s
-#             """, [user.id])
-#             row = cursor.fetchone()
-#             if row:
-#                 profile_data = {
-#                     "profile_picture": row[3] if row[3] else None,
-#                     "username": row[2],
-#                     "registration_number": row[0],
-#                     "specialization": row[1],
-#                 }
-            
-
-#             # Fetch average rating
-#             cursor.execute("""
-#                 SELECT ROUND(AVG(rating),1) AS avg_rating
-#                 FROM doctor_feedback
-#                 WHERE doctor_id = %s
-#                 GROUP BY doctor_id;
-#             """, [user.id])
-#             avg_rating = cursor.fetchone()
-#             profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-
-#             # Fetch feedback
-#             cursor.execute("""
-#                 SELECT feedback, rating, patient_id
-#                 FROM doctor_feedback
-#                 WHERE doctor_id = %s
-#                 ORDER BY created_at DESC;
-#             """, [user.id])
-#             feedback_list = cursor.fetchall()
-#             profile_data["feedback_list"] = feedback_list
-
-#     form = ProfilePictureForm()
-
-#     return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
-# def profile_view(request):
-    # """View to render the profile page based on user role using SQL queries."""
-    # user = request.user  # Get the logged-in user
-    # profile_data = {}
-    # feedback_list = []
-
-    # with connection.cursor() as cursor:
-    #     if user.role == 'patient':
-    #         # Fetch patient details
-    #         cursor.execute("""
-    #             SELECT username, age, role, profile_picture 
-    #             FROM accounts_user
-    #             WHERE id = %s
-    #         """, [user.id])
-    #         row = cursor.fetchone()
-    #         if row:
-    #             profile_data = {
-    #                 "profile_picture": row[3] if row[3] else None,
-    #                 "username": row[0],
-    #                 "age": row[1],
-    #                 "role": row[2],
-    #             }
-    #     elif user.role == 'doctor':
-    #         # Fetch doctor details
-    #         cursor.execute("""
-    #             SELECT d.registration_number, d.specialization, u.username, u.profile_picture
-    #             FROM doctor_table d
-    #             INNER JOIN accounts_user u ON d.user_id = u.id
-    #             WHERE d.user_id = %s
-    #         """, [user.id])
-    #         row = cursor.fetchone()
-    #         if row:
-    #             profile_data = {
-    #                 "profile_picture": row[3] if row[3] else None,
-    #                 "username": row[2],
-    #                 "registration_number": row[0],
-    #                 "specialization": row[1],
-    #             }
-
-    #         # Fetch average rating
-    #         cursor.execute("""
-    #             SELECT ROUND(AVG(rating),1) AS avg_rating
-    #             FROM doctor_feedback
-    #             WHERE doctor_id = %s
-    #             GROUP BY doctor_id;
-    #         """, [user.id])
-    #         avg_rating = cursor.fetchone()
-    #         profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-
-    #         # Fetch feedback with patient names
-    #         cursor.execute("""
-    #             SELECT df.feedback, df.rating, au.username
-    #             FROM doctor_feedback df
-    #             JOIN accounts_user au ON df.patient_id = au.id
-    #             WHERE df.doctor_id = %s
-    #             ORDER BY df.created_at DESC;
-    #         """, [user.id])
-    #         feedback_list = cursor.fetchall()
-    #         profile_data["feedback_list"] = feedback_list
-
-    # form = ProfilePictureForm()
-
-    # return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form, 'feedback_list': feedback_list})
 @login_required
 def profile_view(request):
     """View to render the profile page based on user role using SQL queries."""
@@ -654,34 +515,7 @@ def profile_view(request):
             """, [user.id])
             avg_rating = cursor.fetchone()
             profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-            # Fetch feedback
-            # cursor.execute("""
-            #     SELECT feedback, rating, patient_id
-            #     FROM doctor_feedback
-            #     WHERE doctor_id = %s
-            #     ORDER BY created_at DESC;
-            # """, [user.id])
-            # feedback_list = cursor.fetchall()
-            # profile_data["feedback_list"] = feedback_list
-            # # # Fetch feedback with patient names
-            # cursor.execute("""
-            #     SELECT df.feedback, df.rating, au.username
-            #     FROM doctor_feedback df
-            #     JOIN accounts_user au ON df.patient_id = au.id
-            #     WHERE df.doctor_id = %s
-            #     ORDER BY df.created_at DESC;
-            # """, [user.id])
-            # formatted_feedback_list = cursor.fetchall()
 
-            # # Formatting feedback for easier use in templates
-            # formatted_feedback_list = [
-            #     {
-            #         "feedback": fb[0],
-            #         "rating": fb[1],
-            #         "patient_name": fb[2]  # Using `username`
-            #     } for fb in feedback_list
-            # ]
-            # profile_data["feedback_list"] = formatted_feedback_list
 
             cursor.execute("""
                 SELECT df.feedback, df.rating, au.username
@@ -852,8 +686,6 @@ def upvote_answer(request):
 @login_required
 
 def add_question(request):
-
-    # Redirect to faq_page since form submission is handled there.
 
     return redirect("accounts:faq_page")
 

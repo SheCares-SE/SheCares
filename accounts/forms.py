@@ -78,27 +78,7 @@ class ProfileUpdateForm(forms.ModelForm):
         return instance
     
 
-# def save(self, user, commit=True):
-#     """Custom save method to update the correct table."""
-#     if self.cleaned_data.get('profile_picture'):
-#         user.profile_picture = self.cleaned_data.get('profile_picture')
-#         user.save(update_fields=['profile_picture'])  # Update only profile picture
 
-#     if hasattr(user, 'doctortable'):  # If the user is a doctor
-#         from gync.models import doctor_table  # Avoid circular imports
-#         doctor_table.objects.filter(doctor_id=user.id).update(
-#             registration_no=self.cleaned_data.get('registration_no'),
-#             specialization=self.cleaned_data.get('specialization')
-#         )
-
-#     elif user.role == 'patient':  # If the user is a patient
-#         from patient.models import patient_table  # Avoid circular imports
-#         patient_table.objects.filter(userid=user.id).update(
-            
-#             age=self.cleaned_data.get('age')
-#         )
-
-#     return user  # Return the updated user object
 
 
 #Aesha

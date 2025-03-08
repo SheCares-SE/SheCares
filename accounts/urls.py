@@ -16,14 +16,9 @@ urlpatterns = [
     path('edit-profile/', edit_profile, name='edit_profile'),
     path('doctor/<int:doctor_id>/', views.doctor_profile, name='doctor_profile'),
     path('doctor/<int:doctor_id>/feedback/', views.submit_feedback, name='submit_feedback'),
-    # path('doctor/<int:doctor_id>/', views.profile_view, name='doctor_profile'),
-    # path('doctor/<int:doctor_id>/feedback/', submit_feedback, name='submit_feedback'),
-    path('recommend-doctor/', views.recommend_doctor_view, name='recommend_doctor'),
-    # path('doctor/<int:doctor_id>/', views.gynecologist_profile_view, name='doctor_profile'),
    
-    # path('doctor/<int:doctor_id>/', views.gynecologist_profile_view, name='doctor_profile'),
-    # path('doctor/<int:doctor_id>/feedback/', submit_feedback_view, name='submit_feedback'),
-    # path('profile/', profile_view, name='profile_view'),
+    path('recommend-doctor/', views.recommend_doctor_view, name='recommend_doctor'),
+   
     path('profile/upload_picture/', upload_profile_picture, name='upload_profile_picture'),
     path('profile/remove_picture/', remove_profile_picture, name='remove_profile_picture'),
     path('doctor-dashboard/', doctor_dashboard, name='doctor_dashboard'),
@@ -34,7 +29,6 @@ urlpatterns = [
     
     path('signup/<str:role>/', signup_view, name='signup'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('accounts:login')), name='logout'),
-    # path('recommend-doctor/', recommend_doctor_view, name='recommend_doctor'),
     path('faq/', faq_page, name='faq_page'),
     path('faq/add_question/', add_question, name='add_question'),
     path('faq/add_answer/<int:question_id>/', add_answer, name='add_answer'),
