@@ -4,71 +4,9 @@ from django.db import connection
 from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
-# from django.http import JsonResponse
-# from accounts.models import User  
-# from django.http import HttpResponse
+from django.http import JsonResponse
 
-# from django.db.models import Avg
-
-# from accounts.models import User
-from django.shortcuts import render, get_object_or_404
-
-
-# @login_required
-# def gynecologist_profile_view(request, doctor_id):
-#     doctor = get_object_or_404(DoctorProfile, user__id=doctor_id)
-    
-#     # Fetch feedbacks and calculate average rating
-#     feedbacks = DoctorFeedback.objects.filter(doctor=doctor.user)
-#     avg_rating = feedbacks.aggregate(Avg('rating'))['rating__avg']
-    
-#     if request.method == "POST":
-#         form = FeedbackForm(request.POST)
-#         if form.is_valid():
-#             feedback = form.save(commit=False)
-#             feedback.patient = request.user
-#             feedback.doctor = doctor.user
-#             feedback.save()
-#             return redirect('gync:gynecologist_profile', doctor_id=doctor_id)  # Reload the page after submission
-#     else:
-#         form = FeedbackForm()
-    
-#     context = {
-#         'doctor': doctor,
-#         'feedbacks': feedbacks,
-#         'avg_rating': avg_rating if avg_rating else "No ratings yet",
-#         'form': form
-#     }
-#     return render(request, 'gync/gynecologist_profile.html', context)
-# @login_required
-# def gynecologist_profile_view(request, doctor_id):
-#     # Fetch the doctor's profile using the doctor_id
-#     doctor = get_object_or_404(DoctorProfile, user__id=doctor_id)
-    
-#     # Fetch all feedbacks for this doctor and calculate the average rating
-#     feedbacks = DoctorFeedback.objects.filter(doctor=doctor.user)
-#     avg_rating = feedbacks.aggregate(Avg('rating'))['rating__avg']
-    
-#     # Handle feedback submission
-#     if request.method == "POST":
-#         form = FeedbackForm(request.POST)
-#         if form.is_valid():
-#             feedback = form.save(commit=False)
-#             feedback.patient = request.user  # The logged-in user (patient)
-#             feedback.doctor = doctor.user   # The doctor being rated
-#             feedback.save()
-#             return redirect('gync:gynecologist_profile', doctor_id=doctor_id)  # Reload the page
-#     else:
-#         form = FeedbackForm()
-    
-#     # Prepare context for the template
-#     context = {
-#         'doctor': doctor,
-#         'feedbacks': feedbacks,  # List of feedbacks to display
-#         'avg_rating': round(avg_rating, 1) if avg_rating else "No ratings yet",  # Round the average rating for display
-#         'form': form,  # Feedback form for the patient to submit
-#     }
-#     return render(request, 'gync/gynecologist_profile.html', context)
+from django.http import HttpResponse
 
 @login_required
 def doctor_dashboard(request):
@@ -110,26 +48,36 @@ def blog_detail(request, blog_id):
 #aishna
 
 
+from django.shortcuts import render, redirect
+from django.db import connection
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def doctor_appointments_view(request):
-    user_id = request.user.id
+    print(f"Debug: Logged-in User ID -> {request.user.id}")
+    print(f"Debug: Logged-in User Username -> {request.user.username}")
 
+    user_id = request.user.id
+    print(f"User ID: {user_id}")
 
     # Fetch doctor ID from doctor_table
+    # with connection.cursor() as cursor:
+    #     cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
+    #     doctor_table = cursor.fetchone()
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
-        doctor_table = cursor.fetchone()
-
-    # if not doctor_table:
+          cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
+          doctor_table = cursor.fetchone()
+    print(f"Raw doctor_table result: {doctor_table}")  # Debugging line
+    # if not doctor_table:  # Ensure doctor exists
     #     return render(request, 'error_page.html', {'message': 'Doctor profile not found'})
 
     doctor_id = doctor_table[0]
-    print(doctor_id)
+    print(f"Doctor ID: {doctor_id}")
 
     # Fetch Pending Appointments
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT a.id, a.date, a.time, p.username AS patient_name, p.email, a.status
+            SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
             WHERE a.doctor_id = %s AND a.status = 'Pending'
@@ -137,12 +85,10 @@ def doctor_appointments_view(request):
         """, [doctor_id])
         pending_appointments = cursor.fetchall()
 
-    print("Pending Appointments: ", pending_appointments)
-
     # Fetch Confirmed Appointments
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT a.id, a.date, a.time, p.username AS patient_name, p.email, a.status
+            SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
             WHERE a.doctor_id = %s AND a.status = 'Confirmed'
@@ -150,7 +96,8 @@ def doctor_appointments_view(request):
         """, [doctor_id])
         confirmed_appointments = cursor.fetchall()
 
-    print("Confirmed Appointments: ", confirmed_appointments)
+    print("Pending Appointments:", pending_appointments)
+    print("Confirmed Appointments:",confirmed_appointments)
 
     return render(request, 'gync/doctor_appointments.html', {
         'pending_appointments': pending_appointments,
@@ -160,23 +107,13 @@ def doctor_appointments_view(request):
 @login_required
 def confirm_appointment(request, appointment_id):
     with connection.cursor() as cursor:
-        cursor.execute("""
-            UPDATE gync_appointment 
-            SET status = 'Confirmed' 
-            WHERE id = %s
-        """, [appointment_id])
+        cursor.execute("UPDATE gync_appointment SET status = 'Confirmed' WHERE id = %s", [appointment_id])
         connection.commit()
-
     return redirect('gync:doctor_appointments')
 
 @login_required
 def reject_appointment(request, appointment_id):
     with connection.cursor() as cursor:
-        cursor.execute("""
-            UPDATE gync_appointment 
-            SET status = 'Rejected' 
-            WHERE id = %s
-        """, [appointment_id])
+        cursor.execute("UPDATE gync_appointment SET status = 'Rejected' WHERE id = %s", [appointment_id])
         connection.commit()
-
     return redirect('gync:doctor_appointments')
