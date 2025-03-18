@@ -146,6 +146,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'  # Change from 'sheCares.User' to 'accounts.User'
   # Ensure this matches your app name
 # In settings.py
-LOGIN_URL = 'login/'  # Change 'login' to the name of your login URL
+LOGIN_REDIRECT_URL = '/'
+ # Change 'login' to the name of your login URL
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
