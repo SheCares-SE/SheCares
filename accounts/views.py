@@ -635,52 +635,143 @@ def faq_page(request):
 
 
 
-@login_required
+# @login_required
 
+# def upvote_question(request):
+
+#     cursor = connection.cursor()
+
+#     qus_id = request.POST.get("qus_id")
+
+#     cursor.execute("""
+
+#         UPDATE accounts_question SET upvote_count = upvote_count + 1
+
+#         WHERE qus_id = %s
+
+#     """, [qus_id])
+
+#     cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
+
+#     new_count = cursor.fetchone()[0]
+
+#     return JsonResponse({"upvote_count": new_count})
+
+
+
+# @login_required
+
+# def upvote_answer(request):
+
+#     cursor = connection.cursor()
+
+#     ans_id = request.POST.get("ans_id")
+
+#     cursor.execute("""
+
+#         UPDATE accounts_answer SET upvote_count = upvote_count + 1
+
+#         WHERE ans_id = %s
+
+#     """, [ans_id])
+
+#     cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
+
+#     new_count = cursor.fetchone()[0]
+
+#     return JsonResponse({"upvote_count": new_count})
+
+@login_required
 def upvote_question(request):
+    if request.method == "POST":
+        user_id = request.user.id
+        qus_id = request.POST.get("qus_id")
 
-    cursor = connection.cursor()
+        cursor = connection.cursor()
 
-    qus_id = request.POST.get("qus_id")
+        # Check if the user has already liked the question
+        cursor.execute(
+            "SELECT COUNT(*) FROM accounts_questionlike WHERE user_id = %s AND question_id = %s",
+            [user_id, qus_id]
+        )
+        already_liked = cursor.fetchone()[0] > 0  # If count > 0, user has already liked
 
-    cursor.execute("""
+        if already_liked:
+            # Unlike (remove like)
+            cursor.execute(
+                "DELETE FROM accounts_questionlike WHERE user_id = %s AND question_id = %s",
+                [user_id, qus_id]
+            )
+            cursor.execute(
+                "UPDATE accounts_question SET upvote_count = upvote_count - 1 WHERE qus_id = %s",
+                [qus_id]
+            )
+            liked = False
+        else:
+            # Like (add like)
+            cursor.execute(
+                "INSERT INTO accounts_questionlike (user_id, question_id, created_at) VALUES (%s, %s, NOW())",
+                [user_id, qus_id]
+            )
+            cursor.execute(
+                "UPDATE accounts_question SET upvote_count = upvote_count + 1 WHERE qus_id = %s",
+                [qus_id]
+            )
+            liked = True
 
-        UPDATE accounts_question SET upvote_count = upvote_count + 1
+        # Get updated like count
+        cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
+        new_count = cursor.fetchone()[0]
 
-        WHERE qus_id = %s
+        return JsonResponse({"upvote_count": new_count, "liked": liked})
 
-    """, [qus_id])
-
-    cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
-
-    new_count = cursor.fetchone()[0]
-
-    return JsonResponse({"upvote_count": new_count})
-
-
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 @login_required
-
 def upvote_answer(request):
+    if request.method == "POST":
+        user_id = request.user.id
+        ans_id = request.POST.get("ans_id")
 
-    cursor = connection.cursor()
+        cursor = connection.cursor()
 
-    ans_id = request.POST.get("ans_id")
+        # Check if the user has already liked the answer
+        cursor.execute(
+            "SELECT COUNT(*) FROM accounts_answerlike WHERE user_id = %s AND answer_id = %s",
+            [user_id, ans_id]
+        )
+        already_liked = cursor.fetchone()[0] > 0
 
-    cursor.execute("""
+        if already_liked:
+            # Unlike (remove like)
+            cursor.execute(
+                "DELETE FROM accounts_answerlike WHERE user_id = %s AND answer_id = %s",
+                [user_id, ans_id]
+            )
+            cursor.execute(
+                "UPDATE accounts_answer SET upvote_count = upvote_count - 1 WHERE ans_id = %s",
+                [ans_id]
+            )
+            liked = False
+        else:
+            # Like (add like)
+            cursor.execute(
+                "INSERT INTO accounts_answerlike (user_id, answer_id, created_at) VALUES (%s, %s, NOW())",
+                [user_id, ans_id]
+            )
+            cursor.execute(
+                "UPDATE accounts_answer SET upvote_count = upvote_count + 1 WHERE ans_id = %s",
+                [ans_id]
+            )
+            liked = True
 
-        UPDATE accounts_answer SET upvote_count = upvote_count + 1
+        # Get updated like count
+        cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
+        new_count = cursor.fetchone()[0]
 
-        WHERE ans_id = %s
+        return JsonResponse({"upvote_count": new_count, "liked": liked})
 
-    """, [ans_id])
-
-    cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
-
-    new_count = cursor.fetchone()[0]
-
-    return JsonResponse({"upvote_count": new_count})
-
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required

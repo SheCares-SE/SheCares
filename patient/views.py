@@ -7,7 +7,8 @@ from .forms import AppointmentForm
 import logging
 from django.http import JsonResponse
 from .models import Doctor
-from datetime import datetime , timedelta # ✅ Add this line
+from datetime import datetime , timedelta 
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def patient_dashboard(request):
+    
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT a.id, a.date, a.time, a.status, g.user_id, u.username, g.specialization
@@ -27,7 +29,9 @@ def patient_dashboard(request):
 
     return render(request, 'patient/patient_dashboard.html', {
         'appointments': appointments,
+   
     })
+   
 
 # @login_required
 # def book_appointment(request):
