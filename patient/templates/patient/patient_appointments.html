@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,10 +52,76 @@
       font-size: 0.9rem;
       padding: 0.5rem 1rem;
       border-radius: 5px;
+    }/* Navbar styling matching the Doctor Dashboard */
+    .navbar {
+      background-color: #fff;
+      border-bottom: 2px solid #e3e3e3;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 20;
     }
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1e3c72 !important;
+      display: flex;
+      align-items: center;
+    }
+    /* Reverse order to place logo on the right side */
+    .navbar-brand.reverse {
+      flex-direction: row-reverse;
+    }
+    .navbar-brand .brand-text {
+      margin-right: 10px;
+      margin-left: 0;
+    }
+    .navbar-brand.reverse .brand-text {
+      margin-right: 0;
+      margin-left: 10px;
+    }
+    .navbar-brand img {
+      height: 40px;
+      width: 40px;
+      border: 2px solid #1e3c72;
+      border-radius: 50%;
+    }
+    .nav-link {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #1e3c72 !important;
+      margin-left: 15px;
+    }
+    .nav-link:hover {
+      color: #0d1a33 !important;
+    }
+    
   </style>
 </head>
 <body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+      <!-- Use 'reverse' class to position logo to the right -->
+      <a class="navbar-brand reverse" href="#">
+        <span class="brand-text">SheCares - Patient</span>
+        <img src="{% static 'images/logo.jpeg' %}" alt="SheCares Logo">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+         <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+         <ul class="navbar-nav ms-auto">
+           <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_dashboard' %}">Home</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:recommend_doctor' %}">Doctor</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'gync:blog_list' %}">Blog</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li>
+           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
+         </ul>
+      </div>
+    </div>
+  </nav>
   <div class="container mt-5">
     <h2 class="text-center mb-4">My Appointments</h2>
     <div class="card appointment-card">

@@ -80,9 +80,9 @@ def doctor_appointments_view(request):
             SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
-            WHERE a.doctor_id = %s AND a.status = 'Pending'
+            WHERE a.doctor_id = (%s) AND a.status = 'Pending'
             ORDER BY a.date DESC, a.time DESC;
-        """, [doctor_id])
+        """, [user_id])
         pending_appointments = cursor.fetchall()
 
     # Fetch Confirmed Appointments
