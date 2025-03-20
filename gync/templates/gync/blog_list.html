@@ -4,12 +4,14 @@
     </head>
     
     <div class="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
-        <h2 class="text-2xl font-bold text-green-700 mb-4">My Blogs</h2>
+        <h2 class="text-2xl font-bold text-green-700 mb-4">Blogs</h2>
         
         <div class="mb-4">
+            {% if user.role == 'doctor' %}
             <a href="{% url 'gync:blog_create' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition">
                 + Create New Blog
             </a>
+            {% endif %}
         </div>
     
         <ul class="divide-y divide-gray-300">
@@ -32,7 +34,4 @@
             {% endif %}
         </div>
     </div>
-    
-    
 </html>
-
