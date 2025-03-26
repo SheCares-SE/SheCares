@@ -41,5 +41,3 @@ urlpatterns = [
     path('patient/', include('patient.urls', namespace='patient')),
     path('gync/', include('gync.urls', namespace='gync')),
 ]
-
-

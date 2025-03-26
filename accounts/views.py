@@ -128,7 +128,7 @@ def edit_profile(request):
                     connection.commit()
             # user.save()
             # messages.success(request, "Profile updated successfully!")
-            return redirect('accounts:profile')  # Redirect to the profile page
+            return redirect('accounts:profile_view')  # Redirect to the profile page
 
         else:
             messages.error(request, "Error updating profile. Please check your inputs.")

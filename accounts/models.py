@@ -25,7 +25,7 @@ class PatientProfile(models.Model):
         db_table = "patient_table"
 
     def __str__(self):
-        return f"{self.user.username} - {self.age}"
+        return f"{self.user.username}"
 
 # Doctor Profile Model
 class DoctorProfile(models.Model):

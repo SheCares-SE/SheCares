@@ -5,7 +5,7 @@ from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
 from django.http import JsonResponse
-
+from django.contrib import messages
 from django.http import HttpResponse
 
 @login_required
@@ -21,14 +21,18 @@ def get_doctor_table_view(request, doctor_id):
 
 @login_required
 def blog_list(request):
-    blogs = Blog.objects.filter(author=request.user)
+    if request.user.role == 'doctor':
+        blogs = Blog.objects.filter(author=request.user)
+    else:
+        blogs = Blog.objects.all()
     show_all = request.GET.get("show_all", "false") == "true"
-    blogs = Blog.objects.all() if show_all else blogs
-    return render(request, "gync/blog_list.html", {"blogs": blogs, "show_all": show_all})
-
-
+    return render(request, 'gync/blog_list.html', {'blogs': blogs, 'show_all': show_all})
 @login_required
 def blog_create(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can create blogs.")
+        return redirect('gync:blog_list')
+
     if request.method == "POST":
         form = BlogForm(request.POST)
         if form.is_valid():
@@ -91,9 +95,9 @@ def doctor_appointments_view(request):
             SELECT a.id, a.date, a.time, p.username, p.email, a.status
             FROM gync_appointment a
             JOIN accounts_user p ON a.patient_id = p.id
-            WHERE a.doctor_id = %s AND a.status = 'Confirmed'
+            WHERE a.doctor_id = (%s) AND a.status = 'Confirmed'
             ORDER BY a.date DESC, a.time DESC;
-        """, [doctor_id])
+        """, [user_id])
         confirmed_appointments = cursor.fetchall()
 
     print("Pending Appointments:", pending_appointments)
