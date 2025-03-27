@@ -91,6 +91,11 @@
      {% elif request.user.role == 'doctor' %}
        <p class="text-gray-700"><strong>Registration No.:</strong> {{ profile.registration_number }}</p>
        <p class="text-gray-700"><strong>Specialization:</strong> {{ profile.specialization }}</p>
+       <p class="text-gray-700"><strong>City:</strong> {{ profile.city }}</p>
+       <p class="text-gray-700"><strong>Opening Time:</strong> {{ profile.opening_time }}</p>
+       <p class="text-gray-700"><strong>Closing Time:</strong> {{ profile.closing_time }}</p>
+       <p class="text-gray-700"><strong>Break Time:</strong> {{ profile.break_start }} to {{ profile.break_end }}</p>
+
        <p class="text-gray-700"><strong>Average Rating:</strong> {{ profile.avg_rating }} ⭐</p>
      {% endif %}
    </div>

@@ -31,40 +31,6 @@ def patient_dashboard(request):
         'appointments': appointments,
    
     })
-   
-
-# @login_required
-# def book_appointment(request):
-#     doctors = get_doctors()  # Get all doctors
-
-#     if request.method == 'POST':
-        
-#         form = AppointmentForm(request.POST)
-        
-#         print(form.is_valid())
-#         if form.is_valid():
-#             appointment = form.save(commit=False)  # Don't save yet
-#             appointment.patient = request.user  # Assign logged-in user as patient
-            
-#             doctor_id = appointment.doctor.id
-#             patient_id = request.user.id
-#             date = appointment.date.strftime('%Y-%m-%d')
-#             time = appointment.time.strftime('%H:%M:%S')
-#             status = "Pending"  # Default status
-
-#             # Insert into the database using raw SQL
-#             with connection.cursor() as cursor:
-#                 cursor.execute("""
-#                     INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status) 
-#                     VALUES (%s, %s, %s, %s, %s)
-#                 """, [patient_id, doctor_id, date, time, status])
-
-#             return redirect('patient:patient_appointments')  # Redirect after successful booking
-
-#     else:
-#         form = AppointmentForm()  # Empty form for GET request
-
-#     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 
 def get_doctors():
     with connection.cursor() as cursor:
@@ -72,30 +38,45 @@ def get_doctors():
         doctors = cursor.fetchall()
     return [{"id": doctor[0], "username": doctor[1]} for doctor in doctors]  # Return list of dictionaries
 
+
+from django.shortcuts import render, redirect
+from django.db import connection
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from .models import DoctorProfile
+from .forms import AppointmentForm
+
 @login_required
 def book_appointment(request):
     doctors = get_doctors()  # Get doctors using raw SQL
 
     if request.method == 'POST':
         form = AppointmentForm(request.POST, doctors=doctors)
-        print(form.is_valid())  # Pass doctors list
+
         if form.is_valid():
-            doctor_id = form.cleaned_data['doctor']
+            doctor_id = int(form.cleaned_data['doctor'])
             date = form.cleaned_data['date']
             time = form.cleaned_data['time']
-            date_new=date.strftime('%Y-%m-%d')
-            time_new= str(time.strftime('%H:%M:%S')) 
-            patient_id = request.user.id 
-            print(f"Selected Doctor ID: {doctor_id}")  # Debugging print
-            # Save appointment using raw SQL query
-            print(f"Appointment Date: {date_new}, Appointment Time: {time_new}")
+            date_new = date.strftime('%Y-%m-%d')
+            time_new = time.strftime('%H:%M:%S')  
+            patient_id = request.user.id  
+            
+            # Fetch doctor details from the database
+            try:
+                doctor = DoctorProfile.objects.get(user_id=doctor_id)
+            except DoctorProfile.DoesNotExist:
+                form.add_error('doctor', 'Selected doctor does not exist.')
+                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
+            if not is_valid_appointment(doctor, time):
+                print("Adding error to form")
+                form.add_error('time', 'Appointment time is outside working hours or during the break.')
+                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
             with connection.cursor() as cursor:
                 query = """ INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status) VALUES (%s, %s, %s, %s, 'Pending')"""
-                params = (patient_id, doctor_id, str(date_new), str(time_new))
-
-                print("Executing query:", query % params)  # Log the query with parameters
+                params = (patient_id, doctor_id, date_new, time_new)
                 cursor.execute(query, params)
-
 
             return redirect('patient:patient_appointments')
         else:
@@ -104,6 +85,24 @@ def book_appointment(request):
         form = AppointmentForm(doctors=doctors)  # Pass doctors list to form
 
     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
+# Function to validate appointment time
+def is_valid_appointment(doctor, appointment_time):
+    """ Check if the appointment is within working hours and not during the break """
+    
+    opening = doctor.opening_time
+    closing = doctor.closing_time
+    break_start = doctor.break_start
+    break_end = doctor.break_end
+
+    if not (opening <= appointment_time <= closing):  # Must be within working hours
+        return False
+    if break_start <= appointment_time <= break_end:  # Must not be during break
+        return False
+
+    return True
+
+
 @login_required
 def patient_appointments(request):
     with connection.cursor() as cursor:

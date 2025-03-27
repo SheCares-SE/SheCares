@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +43,30 @@
         p {
             color: #777;
         }
+        .btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .btn-profile {
+            background-color: #007bff;
+        }
+        .btn-profile:hover {
+            background-color: #0056b3;
+        }
+        .btn-slots {
+            background-color: #28a745;
+        }
+        .btn-slots:hover {
+            background-color: #218838;
+        }
     </style>
 </head> 
 
@@ -82,10 +105,13 @@
                     <small>Registration No: {{ doctor.2 }}</small><br> <!-- Registration Number -->
                     <small>Specialization: {{ doctor.3 }}</small><br> <!-- Specialization -->
                     <small>City: {{ doctor.4|default:"None" }}</small><br> <!-- City -->
-                    <a href="{% url 'accounts:doctor_profile' doctor.0 %}" 
-   class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition">
-   View Profile
-</a>
+                    <br>
+                    <a href="{% url 'accounts:doctor_profile' doctor.0 %}" class="btn btn-profile">
+                        View Profile
+                    </a>
+                    <a href="{% url 'gync:doctor_available_slots' doctor.0 %}" class="btn btn-slots">
+                        Check Available Slots
+                    </a>
                 </li>
             {% endfor %}
         </ul>

@@ -36,6 +36,37 @@
           <input type="text" name="specialization" value="{{ form.specialization.value|default:'' }}" 
                  class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
         </div>
+        <!-- City (Doctors Only) -->
+        <div>
+          <label class="block text-gray-700">City</label>
+          <input type="text" name="city" value="{{ form.city.value|default:'' }}" 
+                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+        </div>
+        <!-- Opening Time (Doctors Only) -->
+        <div>
+          <label class="block text-gray-700">Opening Time</label>
+          <input type="text" name="opening_time" value="{{ form.opening_time.value|default:'' }}" 
+                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+        </div>
+        <!-- Closing Time (Doctors Only) -->
+        <div>
+          <label class="block text-gray-700">Closing Time</label>
+          <input type="text" name="closing_time" value="{{ form.closing_time.value|default:'' }}" 
+                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+        </div>
+        <!-- Break Start Time (Doctors Only) -->
+        <div>
+          <label class="block text-gray-700">Break Start Time</label>
+          <input type="text" name="break_start" value="{{ form.break_start.value|default:'' }}" 
+                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+        </div>
+        <!-- Break End Time (Doctors Only) -->
+        <div>
+          <label class="block text-gray-700">Break End Time</label>
+          <input type="text" name="break_end" value="{{ form.break_end.value|default:'' }}" 
+                 class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
+        </div>        
+
       {% elif user_type == "patient" %}
         <!-- Age (Patients Only) -->
         <div>

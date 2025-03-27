@@ -12,6 +12,11 @@
             <h2 class="text-3xl font-bold text-blue-700">Dr. {{ username }}</h2>
             <p class="text-gray-500">Specialization: {{ specialization }}</p>
             <p class="text-gray-500">City: {{ city }}</p>
+            <p><strong>Opening Time:</strong> {{ opening_time }}</p>
+            <p><strong>Closing Time:</strong> {{ closing_time }}</p>
+            <p><strong>Break Time:</strong> {{ break_start }} to {{ break_end }}</p>
+
+            <!-- <p class="text-gray-500">Availability: {{ availability }}</p> -->
             <p class="text-gray-700 font-semibold mt-2">Average Rating: {{ avg_rating|floatformat:1 }}/5 ⭐</p>
         </div>
 

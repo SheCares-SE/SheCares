@@ -184,45 +184,32 @@ button:hover {
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light">
-    <div class="container">
-      <!-- Use 'reverse' class to position logo to the right -->
-      <a class="navbar-brand reverse" href="#">
-        <span class="brand-text">SheCares - Patient</span>
-        <img src="{% static 'images/logo.jpeg' %}" alt="SheCares Logo">
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-         <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-         <ul class="navbar-nav ms-auto">
-           <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_dashboard' %}">Home</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:recommend_doctor' %}">Doctor</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'gync:blog_list' %}">Blog</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li>
-           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
-         </ul>
-      </div>
-    </div>
-  </nav>
-    <div class="container1 mt-5">
-        <h2>Book Appointment</h2>
-        {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-        {% endif %}
-        {% if form_errors %}
-            <div class="alert alert-danger" role="alert">
-                <ul>
-                    {% for field, errors in form_errors.items %}
-                        <li>{{ field }}: {{ errors|join:", " }}</li>
-                    {% endfor %}
+        <div class="container">
+            <a class="navbar-brand reverse" href="#">
+                <span class="brand-text">SheCares - Patient</span>
+                <img src="{% static 'images/logo.jpeg' %}" alt="SheCares Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_dashboard' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:recommend_doctor' %}">Doctor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'gync:blog_list' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
                 </ul>
             </div>
-        {% endif %}
+        </div>
+    </nav>
+
+    <div class="container1 mt-5">
+        <h2>Book Appointment</h2>
+
         <form method="post">
             {% csrf_token %}
             <div class="mb-3">
@@ -232,15 +219,39 @@ button:hover {
                         <option value="{{ doctor.id }}">{{ doctor.username }}</option>
                     {% endfor %}
                 </select>
+                {% if form.doctor.errors %}
+                    <div class="text-danger">
+                        {% for error in form.doctor.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
+
             <div class="mb-3">
                 <label for="id_date">Date</label>
                 {{ form.date }}
+                {% if form.date.errors %}
+                    <div class="text-danger">
+                        {% for error in form.date.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
+
             <div class="mb-3">
                 <label for="id_time">Time</label>
                 {{ form.time }}
+                {% if form.time.errors %}
+                    <div class="text-danger">
+                        {% for error in form.time.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
+
             <button type="submit" class="btn btn-primary">Book Appointment</button>
         </form>
     </div>

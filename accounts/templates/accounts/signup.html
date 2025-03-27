@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up - SheCares</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Dark-to-Light Gradient Background */
     body {
       background: linear-gradient(135deg, #4b0082, #a6c1ee);
       height: 100vh;
@@ -16,8 +14,6 @@
       justify-content: center;
       font-family: 'Poppins', sans-serif;
     }
-
-    /* Glassmorphism Card */
     .glass {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(12px);
@@ -25,55 +21,23 @@
       padding: 2rem;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       width: 100%;
-      max-width: 450px;
+      max-width: 500px;
     }
-
-    /* Title Styling */
-    .glass h2 {
-      color: #fff;
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-
-    /* Label Styling */
     label {
       color: #ffffff;
       font-weight: bold;
-      display: block;
-      margin-top: 12px;
     }
-
-    /* Input Styling */
-    .custom-input {
+    .custom-input, .custom-select {
       width: 100%;
       padding: 10px;
-      margin-top: 5px;
       border-radius: 8px;
       border: none;
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
       color: #fff;
       font-size: 1rem;
-      font-weight: bold;
-      transition: 0.3s ease-in-out;
+      margin-bottom: 10px;
     }
-
-    /* Placeholder Color */
-    .custom-input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: normal;
-    }
-
-    /* Focus Effect */
-    .custom-input:focus {
-      outline: none;
-      border: 2px solid #a6c1ee;
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    /* Custom Button */
     .custom-btn {
       background: linear-gradient(to right, #6a0dad, #9b30ff);
       color: white;
@@ -84,26 +48,24 @@
       transition: all 0.3s;
       cursor: pointer;
       width: 100%;
-      font-size: 1.1rem;
     }
-
     .custom-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
-      background: linear-gradient(to right, #50008c, #8a2be2);
     }
   </style>
 </head>
 <body>
 
   <div class="glass">
-    <h2>Sign up as {{ role }}</h2>
+    <h2 class="text-center text-white font-bold text-xl">Sign up as {{ role }}</h2>
     <form method="post" class="space-y-4">
       {% csrf_token %}
       
       {% for field in form %}
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
+        <div class="flex justify-between">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        </div>
       {% endfor %}
 
       <button type="submit" class="custom-btn">Register</button>

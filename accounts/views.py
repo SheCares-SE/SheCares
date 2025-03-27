@@ -41,7 +41,7 @@ def edit_profile(request):
         user_type = 'doctor'
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT d.registration_number, d.specialization,a.username
+                SELECT d.registration_number, d.specialization,a.username,d.city, d.opening_time, d.closing_time, d.break_start, d.break_end
                 FROM doctor_table d JOIN accounts_user a ON a.id=d.user_id
                 WHERE d.user_id = %s
             """, [user.id])
@@ -50,7 +50,13 @@ def edit_profile(request):
                 initial_data = {
                     'registration_number': row[0],
                     'specialization': row[1],
-                    'username':row[2]
+                    'username':row[2],
+                    'city': row[3],
+                    'opening_time': row[4],
+                    'closing_time': row[5],
+                    'break_start': row[6],
+                    'break_end': row[7]
+                    # 'availability': row[4]
                 }
 
     elif user.role == 'patient':  # If user is a patient
@@ -99,13 +105,19 @@ def edit_profile(request):
                 registration_number = form.cleaned_data.get('registration_number')
                 specialization = form.cleaned_data.get('specialization')
                 username = form.cleaned_data.get('username')
+                city = form.cleaned_data.get('city')
+                opening_time = form.cleaned_data.get('opening_time')
+                closing_time = form.cleaned_data.get('closing_time')
+                break_start = form.cleaned_data.get('break_start')
+                break_end = form.cleaned_data.get('break_end')
+                # availability = form.cleaned_data.get('availability')
                 # with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         UPDATE doctor_table 
-                        SET registration_number = %s, specialization = %s
+                        SET registration_number = %s, specialization = %s, city = %s, opening_time=%s, closing_time=%s,break_start=%s, break_end=%s
                         WHERE user_id = %s
-                     """, [registration_number, specialization, user.id])
+                     """, [registration_number, specialization,city,opening_time,closing_time,break_start,break_end, user.id])
 
     # Update accounts_user (username)
                     cursor.execute("""
@@ -138,18 +150,22 @@ def edit_profile(request):
 
     return render(request, 'accounts/edit_profile.html', {'form': form, 'user_type': user_type})
 
+
+
 import logging
+
 
 def doctor_profile(request, doctor_id):
     with connection.cursor() as cursor:
         # Fetch doctor details
         cursor.execute("""
-            SELECT u.username, u.last_name, d.specialization, d.city
+            SELECT u.username, u.last_name, d.specialization, d.city , d.opening_time, d.closing_time, d.break_start, d.break_end
             FROM doctor_table d
             JOIN accounts_user u ON d.user_id = u.id
             WHERE d.user_id = %s
         """, [doctor_id])
         doctor = cursor.fetchone()
+
 
         if not doctor:
             return HttpResponse("Doctor not found", status=404)
@@ -176,11 +192,16 @@ def doctor_profile(request, doctor_id):
         "last_name": doctor[1],
         "specialization": doctor[2],
         "city": doctor[3],
+        "opening_time": doctor[4],
+        "closing_time": doctor[5],
+        "break_start": doctor[6],
+        "break_end": doctor[7],
         "avg_rating": avg_rating,
         "feedback_list": feedback_list,
         "doctor_id": doctor_id
     }
     return render(request, 'accounts/doctor_profile.html', context)
+
 
 
 
@@ -192,12 +213,13 @@ def gynecologist_profile_view(request, doctor_id):
 
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT au.id, au.username, dt.specialization 
+            SELECT au.id, au.username, dt.specialization ,dt.availability
             FROM accounts_user au
             JOIN doctor_table dt ON au.id = dt.user_id
             WHERE au.role = 'doctor' AND au.id = %s
         """, [doctor_id])
         row = cursor.fetchone()
+        
         
         if not row:
             return render(request, '404.html', status=404)
@@ -235,6 +257,7 @@ def gynecologist_profile_view(request, doctor_id):
     }
 
     return render(request, 'accounts/doctor_profile.html', context)
+
 
 
 
@@ -433,12 +456,19 @@ def signup_view(request, role):
 
             if role == 'doctor':
                 city = user_data.get('city', 'Default City')
+                opening_time = user_data.get('opening_time')
+                closing_time = user_data.get('closing_time')
+                break_start = user_data.get('break_start')
+                break_end = user_data.get('break_end')
+
+                # availability = user_data.get('availability', 'Defauly Time')  # Capture availability
                 # Insert doctor profile into the doctor_table
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO doctor_table (user_id, registration_number, specialization,city)
-                        VALUES (%s, %s, %s,%s)
-                    """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization'),city])
+                        INSERT INTO doctor_table (user_id, registration_number, specialization, city, opening_time, closing_time, break_start, break_end)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        """, [user_id, user_data.get('registration_number', 'default_registration_number'), user_data.get('specialization', 'default_specialization'), city,opening_time,closing_time,break_start,break_end])
+
             else:
                 # Insert patient profile into the accounts_patient_profile_table
                 with connection.cursor() as cursor:
@@ -492,7 +522,7 @@ def profile_view(request):
         elif user.role == 'doctor':
             # Fetch doctor details
             cursor.execute("""
-                SELECT d.registration_number, d.specialization, u.username, u.profile_picture
+                SELECT d.registration_number, d.specialization, u.username, u.profile_picture ,  d.city, d.opening_time, d.closing_time, d.break_start, d.break_end
                 FROM doctor_table d
                 INNER JOIN accounts_user u ON d.user_id = u.id
                 WHERE d.user_id = %s
@@ -505,6 +535,12 @@ def profile_view(request):
                     "username": row[2],  # Keeping username as per your schema
                     "registration_number": row[0],
                     "specialization": row[1],
+                    "city": row[4],
+                    # "availability": row[5]
+                    "opening_time": row[5],
+                    "closing_time": row[6],
+                    "break_start": row[7],
+                    "break_end": row[8]
                 }
 
             # Fetch average rating
@@ -537,156 +573,55 @@ def profile_view(request):
 
     return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
 
-
 #Urvashi
-
-
-
 @login_required
-
-
 def faq_page(request):
-
     if request.method == "POST":
-
         cursor = connection.cursor()
-
         # If a new question is submitted:
-
         if 'question_text' in request.POST:
-
             question_text = request.POST.get("question_text")
-
             if question_text:
-
                 # Insert the question using raw SQL
-
                 cursor.execute("""
-
                     INSERT INTO accounts_question (user_id, text, created_at, upvote_count)
-
                     VALUES (%s, %s, NOW(), 0)
-
                 """, [request.user.id, question_text])
-
                 messages.success(request, "Question submitted successfully!")
-
             else:
-
                 messages.error(request, "Question cannot be empty.")
-
         # If an answer is submitted:
-
         elif 'answer_text' in request.POST:
-
             question_id = request.POST.get("qus_id")
-
             answer_text = request.POST.get("answer_text")
-
             # Verify that the question exists
-
             cursor.execute("SELECT qus_id FROM accounts_question WHERE qus_id = %s", [question_id])
-
             if cursor.fetchone() is None:
-
                 messages.error(request, "Question not found.")
-
             else:
-
                 if request.user.role == "doctor":
-
                     if answer_text:
-
                         cursor.execute("""
-
                             INSERT INTO accounts_answer (qus_id, user_id, text, created_at, upvote_count)
-
                             VALUES (%s, %s, %s, NOW(), 0)
-
                         """, [question_id, request.user.id, answer_text])
-
                         messages.success(request, "Answer submitted successfully!")
-
                     else:
-
                         messages.error(request, "Answer cannot be empty.")
-
                 else:
-
                     messages.error(request, "Only doctors can answer questions.")
-
         return redirect("accounts:faq_page")
-
-
-
-    # For GET requests, fetch questions with a raw SQL query.
-
-    # Using the model's raw() method returns a RawQuerySet that you can iterate in the template.
-
     questions = Question.objects.raw("""
-
         SELECT * FROM accounts_question
-
         ORDER BY upvote_count DESC, created_at DESC
-
     """)
-
     return render(request, "accounts/faq.html", {"questions": questions})
-
-
-
-# @login_required
-
-# def upvote_question(request):
-
-#     cursor = connection.cursor()
-
-#     qus_id = request.POST.get("qus_id")
-
-#     cursor.execute("""
-
-#         UPDATE accounts_question SET upvote_count = upvote_count + 1
-
-#         WHERE qus_id = %s
-
-#     """, [qus_id])
-
-#     cursor.execute("SELECT upvote_count FROM accounts_question WHERE qus_id = %s", [qus_id])
-
-#     new_count = cursor.fetchone()[0]
-
-#     return JsonResponse({"upvote_count": new_count})
-
-
-
-# @login_required
-
-# def upvote_answer(request):
-
-#     cursor = connection.cursor()
-
-#     ans_id = request.POST.get("ans_id")
-
-#     cursor.execute("""
-
-#         UPDATE accounts_answer SET upvote_count = upvote_count + 1
-
-#         WHERE ans_id = %s
-
-#     """, [ans_id])
-
-#     cursor.execute("SELECT upvote_count FROM accounts_answer WHERE ans_id = %s", [ans_id])
-
-#     new_count = cursor.fetchone()[0]
-
-#     return JsonResponse({"upvote_count": new_count})
 
 @login_required
 def upvote_question(request):
     if request.method == "POST":
         user_id = request.user.id
         qus_id = request.POST.get("qus_id")
-
         cursor = connection.cursor()
 
         # Check if the user has already liked the question
@@ -732,7 +667,6 @@ def upvote_answer(request):
     if request.method == "POST":
         user_id = request.user.id
         ans_id = request.POST.get("ans_id")
-
         cursor = connection.cursor()
 
         # Check if the user has already liked the answer
@@ -780,14 +714,6 @@ def add_question(request):
 
     return redirect("accounts:faq_page")
 
-
-
-
-
-
-
-    # Redirect to faq_page since form submission is handled there.
-
 @login_required
 def add_answer(request, question_id):
     return redirect("accounts:faq_page")
@@ -807,11 +733,7 @@ def your_questions(request):
         "answered_questions": answered_questions,
     })
 
-
-
-
 logger = logging.getLogger(__name__)
-
 @csrf_exempt
 def delete_question(request, qus_id):
     """Deletes a question and all related answers."""
@@ -851,3 +773,4 @@ def delete_answer(request, ans_id):
     except Exception as e:
         logger.error(f"Failed to delete answer: {str(e)}")
         return JsonResponse({"error": f"Failed to delete answer: {str(e)}"}, status=400)
+

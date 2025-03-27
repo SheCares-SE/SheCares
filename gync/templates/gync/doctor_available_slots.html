@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Available Slots</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        form {
+            margin: 20px auto;
+            width: 320px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover { background-color: #0056b3; }
+        ul { list-style: none; padding: 0; }
+        .slot {
+            background: #e6ffe6;
+            color: #155724;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+            border-left: 5px solid #28a745;
+        }
+        .no-slots {
+            background: #ffe6e6;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 10px auto;
+            text-align: center;
+            border-left: 5px solid #dc3545;
+        }
+        .book-btn {
+            display: inline-block;
+            width: 200px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s ease-in-out;
+        }
+        .book-btn:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+    <h1>Available Slots for Dr. {{ doctor.username }}</h1>
+
+    <form method="get">
+        <label for="date"><strong>Select Date:</strong></label>
+        <input type="date" name="date" id="date" value="{{ date|date:'Y-m-d' }}">
+        <button type="submit">Check Availability</button>
+    </form>
+
+    <h2>Suggested Available Slots:</h2>
+    {% if available_slots %}
+        <ul>
+            {% for start_time, end_time in available_slots %}
+                <li class="slot">{{ start_time }} - {{ end_time }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'patient:book_appointment' %}" class="book-btn">Book Appointment</a>
+    {% else %}
+        <p class="no-slots">❌ No available slots for this date.</p>
+    {% endif %}
+</body>
+</html>
