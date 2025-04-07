@@ -1,4 +1,5 @@
 import os
+import logging
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import login, authenticate,get_user_model
 from django.db import connection
@@ -30,6 +31,7 @@ from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
+#AESHA LADANI
 @login_required
 def edit_profile(request):
     user = request.user
@@ -152,7 +154,48 @@ def edit_profile(request):
 
 
 
-import logging
+def recommend_doctor_view(request):
+    # Fetch distinct cities and specializations for the filter dropdowns
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT DISTINCT city FROM doctor_table WHERE city IS NOT NULL")
+        cities = [row[0] for row in cursor.fetchall()]
+
+        cursor.execute("SELECT DISTINCT specialization FROM doctor_table WHERE specialization IS NOT NULL")
+        specializations = [row[0] for row in cursor.fetchall()]
+
+    # Get filter parameters from the request
+    selected_city = request.GET.get('city', '')
+    selected_specialization = request.GET.get('specialization', '')
+
+    # Fetch doctors based on filters
+    query = """
+        SELECT au.id, au.username, dt.registration_number, dt.specialization, dt.city
+        FROM accounts_user au
+        JOIN doctor_table dt ON au.id = dt.user_id
+        WHERE au.role = 'doctor'
+    """
+    params = []
+
+    if selected_city:
+        query += " AND dt.city = %s"
+        params.append(selected_city)
+    if selected_specialization:
+        query += " AND dt.specialization = %s"
+        params.append(selected_specialization)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        doctors = cursor.fetchall()
+
+    context = {
+        'cities': cities,
+        'specializations': specializations,
+        'selected_city': selected_city,
+        'selected_specialization': selected_specialization,
+        'doctors': doctors,
+    }
+    return render(request, 'accounts/recommend_doctor.html', context)
+
 
 
 def doctor_profile(request, doctor_id):
@@ -202,64 +245,83 @@ def doctor_profile(request, doctor_id):
     }
     return render(request, 'accounts/doctor_profile.html', context)
 
-
-
-
-def gynecologist_profile_view(request, doctor_id):
-    from gync.models import Doctor
-
-    # Get doctor using ORM first
-    doctor_obj = get_object_or_404(Doctor, id=doctor_id)  
+@login_required
+def profile_view(request):
+    """View to render the profile page based on user role using SQL queries."""
+    user = request.user  # Get the logged-in user
+    profile_data = {}
+    feedback_list = []
 
     with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT au.id, au.username, dt.specialization ,dt.availability
-            FROM accounts_user au
-            JOIN doctor_table dt ON au.id = dt.user_id
-            WHERE au.role = 'doctor' AND au.id = %s
-        """, [doctor_id])
-        row = cursor.fetchone()
-        
-        
-        if not row:
-            return render(request, '404.html', status=404)
+        if user.role == 'patient':
+            # Fetch patient details
+            cursor.execute("""
+                SELECT username, age, role, profile_picture 
+                FROM accounts_user
+                WHERE id = %s
+            """, [user.id])
+            row = cursor.fetchone()
+            if row:
+                profile_data = {
+                    "profile_picture": row[3] if row[3] else None,
+                    "username": row[0],  # Keeping username as per your schema
+                    "age": row[1],
+                    "role": row[2],
+                }
 
-        doctor_details = {
-            "id": row[0],
-            "username": row[1],
-            "specialization": row[2],
-        }
+        elif user.role == 'doctor':
+            # Fetch doctor details
+            cursor.execute("""
+                SELECT d.registration_number, d.specialization, u.username, u.profile_picture ,  d.city, d.opening_time, d.closing_time, d.break_start, d.break_end
+                FROM doctor_table d
+                INNER JOIN accounts_user u ON d.user_id = u.id
+                WHERE d.user_id = %s
+            """, [user.id])
+            row = cursor.fetchone()
+            print("Doctor Profile Data:", row)
+            if row:
+                profile_data = {
+                    "profile_picture": row[3] if row[3] else None,
+                    "username": row[2],  # Keeping username as per your schema
+                    "registration_number": row[0],
+                    "specialization": row[1],
+                    "city": row[4],
+                    # "availability": row[5]
+                    "opening_time": row[5],
+                    "closing_time": row[6],
+                    "break_start": row[7],
+                    "break_end": row[8]
+                }
 
-        cursor.execute("""
-            SELECT df.feedback, df.rating, au.username AS patient_name 
-            FROM doctor_feedback df
-            JOIN accounts_user au ON df.patient_id = au.id
-            WHERE df.doctor_id = %s
-            ORDER BY df.created_at DESC;
-        """, [doctor_id])
-        feedback_list = cursor.fetchall()
-
-        cursor.execute("""
-            SELECT ROUND(AVG(rating), 1) AS avg_rating
-            FROM doctor_feedback
-            WHERE doctor_id = %s
-            GROUP BY doctor_id;
-        """, [doctor_id])
-        avg_rating = cursor.fetchone()
-
-    doctor_details["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-    doctor_details["feedback_list"] = feedback_list
-
-    # ✅ Corrected context dictionary
-    context = {
-        "doctor": doctor_details,
-        "doctor_id": doctor_id
-    }
-
-    return render(request, 'accounts/doctor_profile.html', context)
-
+            # Fetch average rating
+            cursor.execute("""
+                SELECT ROUND(AVG(rating),1) AS avg_rating
+                FROM doctor_feedback
+                WHERE doctor_id = %s
+            """, [user.id])
+            avg_rating = cursor.fetchone()
+            profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
 
 
+            cursor.execute("""
+                SELECT df.feedback, df.rating, au.username
+                FROM doctor_feedback df
+                JOIN accounts_user au ON df.patient_id = au.id
+                WHERE df.doctor_id = %s
+                ORDER BY df.created_at DESC;
+            """, [user.id])
+            formatted_feedback_list = [
+                {
+                    "feedback": row[0],
+                    "rating": row[1],
+                    "patient_name": row[2]
+                } for row in cursor.fetchall()
+            ]
+            profile_data["feedback_list"] = formatted_feedback_list
+
+    form = ProfilePictureForm()
+
+    return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
 
 def submit_feedback(request, doctor_id):
     if request.method == "POST":
@@ -360,48 +422,7 @@ def select_role_view(request):
     return render(request, 'accounts/select_role.html', {'form': form})
 
 
-# accounts/views.py
-def recommend_doctor_view(request):
-    # Fetch distinct cities and specializations for the filter dropdowns
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT DISTINCT city FROM doctor_table WHERE city IS NOT NULL")
-        cities = [row[0] for row in cursor.fetchall()]
 
-        cursor.execute("SELECT DISTINCT specialization FROM doctor_table WHERE specialization IS NOT NULL")
-        specializations = [row[0] for row in cursor.fetchall()]
-
-    # Get filter parameters from the request
-    selected_city = request.GET.get('city', '')
-    selected_specialization = request.GET.get('specialization', '')
-
-    # Fetch doctors based on filters
-    query = """
-        SELECT au.id, au.username, dt.registration_number, dt.specialization, dt.city
-        FROM accounts_user au
-        JOIN doctor_table dt ON au.id = dt.user_id
-        WHERE au.role = 'doctor'
-    """
-    params = []
-
-    if selected_city:
-        query += " AND dt.city = %s"
-        params.append(selected_city)
-    if selected_specialization:
-        query += " AND dt.specialization = %s"
-        params.append(selected_specialization)
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        doctors = cursor.fetchall()
-
-    context = {
-        'cities': cities,
-        'specializations': specializations,
-        'selected_city': selected_city,
-        'selected_specialization': selected_specialization,
-        'doctors': doctors,
-    }
-    return render(request, 'accounts/recommend_doctor.html', context)
 
 
 
@@ -495,83 +516,6 @@ def signup_view(request, role):
 
 
 
-@login_required
-def profile_view(request):
-    """View to render the profile page based on user role using SQL queries."""
-    user = request.user  # Get the logged-in user
-    profile_data = {}
-    feedback_list = []
-
-    with connection.cursor() as cursor:
-        if user.role == 'patient':
-            # Fetch patient details
-            cursor.execute("""
-                SELECT username, age, role, profile_picture 
-                FROM accounts_user
-                WHERE id = %s
-            """, [user.id])
-            row = cursor.fetchone()
-            if row:
-                profile_data = {
-                    "profile_picture": row[3] if row[3] else None,
-                    "username": row[0],  # Keeping username as per your schema
-                    "age": row[1],
-                    "role": row[2],
-                }
-
-        elif user.role == 'doctor':
-            # Fetch doctor details
-            cursor.execute("""
-                SELECT d.registration_number, d.specialization, u.username, u.profile_picture ,  d.city, d.opening_time, d.closing_time, d.break_start, d.break_end
-                FROM doctor_table d
-                INNER JOIN accounts_user u ON d.user_id = u.id
-                WHERE d.user_id = %s
-            """, [user.id])
-            row = cursor.fetchone()
-            print("Doctor Profile Data:", row)
-            if row:
-                profile_data = {
-                    "profile_picture": row[3] if row[3] else None,
-                    "username": row[2],  # Keeping username as per your schema
-                    "registration_number": row[0],
-                    "specialization": row[1],
-                    "city": row[4],
-                    # "availability": row[5]
-                    "opening_time": row[5],
-                    "closing_time": row[6],
-                    "break_start": row[7],
-                    "break_end": row[8]
-                }
-
-            # Fetch average rating
-            cursor.execute("""
-                SELECT ROUND(AVG(rating),1) AS avg_rating
-                FROM doctor_feedback
-                WHERE doctor_id = %s
-            """, [user.id])
-            avg_rating = cursor.fetchone()
-            profile_data["avg_rating"] = avg_rating[0] if avg_rating else "No ratings yet"
-
-
-            cursor.execute("""
-                SELECT df.feedback, df.rating, au.username
-                FROM doctor_feedback df
-                JOIN accounts_user au ON df.patient_id = au.id
-                WHERE df.doctor_id = %s
-                ORDER BY df.created_at DESC;
-            """, [user.id])
-            formatted_feedback_list = [
-                {
-                    "feedback": row[0],
-                    "rating": row[1],
-                    "patient_name": row[2]
-                } for row in cursor.fetchall()
-            ]
-            profile_data["feedback_list"] = formatted_feedback_list
-
-    form = ProfilePictureForm()
-
-    return render(request, 'accounts/profile.html', {'profile': profile_data, 'form': form})
 
 #Urvashi
 @login_required

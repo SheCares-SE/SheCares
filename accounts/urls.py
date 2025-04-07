@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from patient.views import patient_dashboard  
 from gync.views import doctor_dashboard  
 from .views import faq_page, add_question, add_answer, login_view, upvote_question, upvote_answer ,profile_view, upload_profile_picture, remove_profile_picture, your_questions,delete_question, delete_answer
-from .views import gynecologist_profile_view, submit_feedback
+from .views import  submit_feedback
 from .views import edit_profile
 
 app_name = 'accounts'  # Define the app namespace
