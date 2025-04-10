@@ -20,13 +20,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-#http://127.0.0.1:8000/accounts/login/
-#http://127.0.0.1:8000/accounts/select-role/
-#http://127.0.0.1:8000/recommend-doctor/
-#http://127.0.0.1:8000/book_appointment/
-#http://127.0.0.1:8000/faq/
 
-# use defaultdb;
-# SET SQL_SAFE_UPDATES = 0;
-# UPDATE doctor_table SET specialization = LOWER(specialization);
-# SET SQL_SAFE_UPDATES = 1;
+
