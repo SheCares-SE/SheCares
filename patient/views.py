@@ -46,6 +46,45 @@ from datetime import datetime
 from .models import DoctorProfile
 from .forms import AppointmentForm
 
+# @login_required
+# def book_appointment(request):
+#     doctors = get_doctors()  # Get doctors using raw SQL
+
+#     if request.method == 'POST':
+#         form = AppointmentForm(request.POST, doctors=doctors)
+
+#         if form.is_valid():
+#             doctor_id = int(form.cleaned_data['doctor'])
+#             date = form.cleaned_data['date']
+#             time = form.cleaned_data['time']
+#             date_new = date.strftime('%Y-%m-%d')
+#             time_new = time.strftime('%H:%M:%S')  
+#             patient_id = request.user.id  
+            
+#             # Fetch doctor details from the database
+#             try:
+#                 doctor = DoctorProfile.objects.get(user_id=doctor_id)
+#             except DoctorProfile.DoesNotExist:
+#                 form.add_error('doctor', 'Selected doctor does not exist.')
+#                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
+#             if not is_valid_appointment(doctor, time):
+#                 print("Adding error to form")
+#                 form.add_error('time', 'Appointment time is outside working hours or during the break.')
+#                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
+#             with connection.cursor() as cursor:
+#                 query = """ INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status) VALUES (%s, %s, %s, %s, 'Pending')"""
+#                 params = (patient_id, doctor_id, date_new, time_new)
+#                 cursor.execute(query, params)
+
+#             return redirect('patient:patient_appointments')
+#         else:
+#             print(form.errors)  # Debugging errors
+#     else:
+#         form = AppointmentForm(doctors=doctors)  # Pass doctors list to form
+
+#     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 @login_required
 def book_appointment(request):
     doctors = get_doctors()  # Get doctors using raw SQL
@@ -57,10 +96,17 @@ def book_appointment(request):
             doctor_id = int(form.cleaned_data['doctor'])
             date = form.cleaned_data['date']
             time = form.cleaned_data['time']
+            appointment_datetime = datetime.combine(date, time)
+
+            # Prevent booking in the past or present moment
+            if appointment_datetime <= datetime.now():
+                form.add_error('date', 'You can only book future appointments.')
+                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
             date_new = date.strftime('%Y-%m-%d')
             time_new = time.strftime('%H:%M:%S')  
             patient_id = request.user.id  
-            
+
             # Fetch doctor details from the database
             try:
                 doctor = DoctorProfile.objects.get(user_id=doctor_id)
@@ -69,22 +115,42 @@ def book_appointment(request):
                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 
             if not is_valid_appointment(doctor, time):
-                print("Adding error to form")
                 form.add_error('time', 'Appointment time is outside working hours or during the break.')
                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 
+            # Save appointment using raw SQL
             with connection.cursor() as cursor:
-                query = """ INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status) VALUES (%s, %s, %s, %s, 'Pending')"""
+                query = """
+                    INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status)
+                    VALUES (%s, %s, %s, %s, 'Pending')
+                """
                 params = (patient_id, doctor_id, date_new, time_new)
                 cursor.execute(query, params)
 
             return redirect('patient:patient_appointments')
         else:
-            print(form.errors)  # Debugging errors
+            print(form.errors)  # Debugging form errors
     else:
-        form = AppointmentForm(doctors=doctors)  # Pass doctors list to form
+        form = AppointmentForm(doctors=doctors)  # Initialize empty form with doctors
 
     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+
+
+# Function to validate appointment time
+def is_valid_appointment(doctor, appointment_time):
+    """Check if the appointment time is within working hours and not during break."""
+    opening = doctor.opening_time
+    closing = doctor.closing_time
+    break_start = doctor.break_start
+    break_end = doctor.break_end
+
+    if not (opening <= appointment_time <= closing):  # Must be within working hours
+        return False
+    if break_start <= appointment_time <= break_end:  # Must not be during break
+        return False
+
+
+
 
 # Function to validate appointment time
 def is_valid_appointment(doctor, appointment_time):
