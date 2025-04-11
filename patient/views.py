@@ -45,7 +45,6 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .models import DoctorProfile
 from .forms import AppointmentForm
-
 # @login_required
 # def book_appointment(request):
 #     doctors = get_doctors()  # Get doctors using raw SQL
@@ -135,27 +134,9 @@ def book_appointment(request):
 
     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 
-
 # Function to validate appointment time
 def is_valid_appointment(doctor, appointment_time):
     """Check if the appointment time is within working hours and not during break."""
-    opening = doctor.opening_time
-    closing = doctor.closing_time
-    break_start = doctor.break_start
-    break_end = doctor.break_end
-
-    if not (opening <= appointment_time <= closing):  # Must be within working hours
-        return False
-    if break_start <= appointment_time <= break_end:  # Must not be during break
-        return False
-
-
-
-
-# Function to validate appointment time
-def is_valid_appointment(doctor, appointment_time):
-    """ Check if the appointment is within working hours and not during the break """
-    
     opening = doctor.opening_time
     closing = doctor.closing_time
     break_start = doctor.break_start
