@@ -92,7 +92,9 @@
                 <li class="slot">{{ start_time }} - {{ end_time }}</li>
             {% endfor %}
         </ul>
-        <a href="{% url 'patient:book_appointment' %}" class="book-btn">Book Appointment</a>
+        {% if user.is_authenticated and user.role == 'patient' %}
+            <a href="{% url 'patient:book_appointment' %}" class="book-btn">Book Appointment</a>
+        {% endif %}
     {% else %}
         <p class="no-slots">❌ No available slots for this date.</p>
     {% endif %}
