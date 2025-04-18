@@ -1,3 +1,4 @@
+
 import os
 import logging
 from django.contrib.auth import login,logout
@@ -441,7 +442,7 @@ def doctor_profile(request, doctor_id):
 
 @login_required
 def recommend_doctor_view(request):
-    # Fetch distinct cities and specializations for the filter dropdowns
+    # Fetch doctors with distinct cities and specializations 
     with connection.cursor() as cursor:
         cursor.execute("SELECT DISTINCT city FROM doctor_table WHERE city IS NOT NULL")
         cities = [row[0] for row in cursor.fetchall()]
@@ -488,15 +489,28 @@ def submit_feedback(request, doctor_id):
     if request.method == "POST":
         rating = request.POST.get("rating")
         feedback = request.POST.get("feedback")
-        patient_id = request.user.id  # Get logged-in patient ID
+        patient_id = request.user.id  # Logged-in patient ID
 
         with connection.cursor() as cursor:
+            # Check if feedback already exists
+            cursor.execute("""
+                SELECT 1 FROM doctor_feedback 
+                WHERE doctor_id = %s AND patient_id = %s
+            """, [doctor_id, patient_id])
+            exists = cursor.fetchone()
+
+            if exists:
+                messages.warning(request, "You have already submitted feedback for this doctor.")
+                return redirect('accounts:doctor_profile', doctor_id=doctor_id)
+
+            # Insert feedback
             cursor.execute("""
                 INSERT INTO doctor_feedback (doctor_id, patient_id, rating, feedback, created_at)
                 VALUES (%s, %s, %s, %s, NOW())
             """, [doctor_id, patient_id, rating, feedback])
 
-        
+            messages.success(request, "Feedback submitted successfully!")
+
         return redirect('accounts:doctor_profile', doctor_id=doctor_id)
 
     return redirect('accounts:recommend_doctor')
