@@ -1,17 +1,50 @@
-<html><head>
+<html>
+  <head>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<div class="max-w-3xl mx-auto mt-8 p-6 bg-white shadow-lg rounded-lg">
-    <h2 class="text-3xl font-bold text-black mb-4">{{ blog.title }}</h2>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              emerald:     '#10b981',
+              emeraldDark: '#064e3b',
+              emeraldLight:'#d1fae5',
+              offwhite:    '#f3f4f6',
+              textGray:    '#1f2937',
+            },
+          },
+        },
+      };
+    </script>
+  </head>
 
-    <div class="bg-green-100 bg-opacity-40 p-4 rounded-lg shadow-inner">
-        <p class="text-lg text-gray-800 leading-relaxed">{{ blog.content }}</p>
+  <body class="relative bg-offwhite text-textGray font-sans min-h-screen">
+    <!-- Decorative “blobs” -->
+    <div class="absolute -top-16 -left-16 w-64 h-64 bg-emerald/50 rounded-full filter blur-3xl"></div>
+    <div class="absolute top-1/4 -right-24 w-96 h-96 bg-emeraldLight/50 rounded-full filter blur-2xl"></div>
+
+    <!-- Main content -->
+    <div class="relative z-10 max-w-4xl mx-auto mt-20 px-6">
+
+      <!-- Header -->
+      <header class="border-b-2 border-emerald pb-6 mb-8">
+        <h1 class="text-4xl font-extrabold text-emeraldDark tracking-tight">
+          {{ blog.title }}
+        </h1>
+        <p class="text-sm text-gray-600 mt-2 italic">
+          Published by 
+          <span class="font-semibold text-emeraldDark">{{ blog.author.username }}</span> 
+          on {{ blog.created_at }}
+        </p>
+      </header>
+
+      <!-- Article -->
+      <article class="bg-white p-8 shadow-md">
+        <p class="text-lg leading-relaxed whitespace-pre-line">
+          {{ blog.content }}
+        </p>
+      </article>
+
     </div>
-
-    <p class="text-sm text-gray-600 mt-4 italic">
-        Published by <span class="font-semibold">{{ blog.author.username }}</span> 
-        on {{ blog.created_at }}
-    </p>
-</div>
-
+  </body>
 </html>

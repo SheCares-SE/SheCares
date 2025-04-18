@@ -4,32 +4,69 @@
     {{ form.as_p }}
     <button type="submit">Submit</button>
 </form> -->
+{% load static %}
 <html>
-    <head> <script src="https://cdn.tailwindcss.com"></script></head>
-       
-    <div class="flex justify-center items-center min-h-screen bg-gray-100">
-        <div class="w-full max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold text-green-700 mb-4 text-center">Create Blog</h2>
-    
-            <form method="post" class="space-y-4">
-                {% csrf_token %}
-    
-                <div class="p-4 bg-green-100/50 rounded-lg shadow-md">
-                    {{ form.title.label_tag }}
-                    <input type="text" name="title" class="w-full p-2 mt-1 border border-green-400 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 bg-white">
-    
-                    {{ form.content.label_tag }}
-                    <textarea name="content" rows="5" class="w-full p-2 mt-1 border border-green-400 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 bg-white"></textarea>
-                </div>
-    
-                <button type="submit" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition">
-                    Submit
-                </button>
-            </form>
-        </div>
-    </div>
-    
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              emeralddark: '#064e3b',
+              emeralddarker: '#022c22',
+              emerald: '#10b981',
+              glassbg: 'rgba(255, 255, 255, 0.05)',
+              borderglass: 'rgba(255, 255, 255, 0.15)',
+            },
+            backdropBlur: {
+              xs: '2px',
+            }
+          }
+        }
+      }
+    </script>
+  </head>
 
+  <body class="bg-emeralddarker text-white m-0 p-0 font-sans">
+    <div class="flex min-h-screen">
+      
+      <!-- Left Panel -->
+      <div class="w-1/2 bg-emeralddark text-white p-12 flex flex-col justify-center items-start">
+        <img src="{% static 'images/logo.jpeg' %}" alt="Logo" class="w-16 h-16 mb-6" />
+ <!-- Change to your logo -->
+        <p class="uppercase tracking-widest text-emerald text-sm mb-2">SheCares </p>
+        <h1 class="text-4xl font-bold text-white"> Blogs: Care from Experts</h1>
+      </div>
+
+      <!-- Right Panel (Form) -->
+      <div class="w-1/2 bg-emeralddarker flex justify-center items-center p-10">
+        <div class="w-full max-w-2xl p-6 border border-borderglass bg-glassbg text-white backdrop-blur-sm shadow-xl">
+          <h2 class="text-3xl font-semibold text-emerald mb-6 text-center tracking-wide">Create Blog</h2>
+
+          <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="space-y-4">
+              {{ form.title.label_tag }}
+              <input type="text" name="title"
+                class="w-full px-4 py-2 bg-transparent border border-emerald text-white focus:outline-none focus:ring-2 focus:ring-emerald placeholder-gray-300">
+
+              {{ form.content.label_tag }}
+              <textarea name="content" rows="6"
+                class="w-full px-4 py-2 bg-transparent border border-emerald text-white focus:outline-none focus:ring-2 focus:ring-emerald placeholder-gray-300"></textarea>
+            </div>
+
+            <button type="submit"
+              class="w-full py-3 px-4 bg-emerald text-white font-semibold uppercase tracking-wide border-0 hover:bg-emeralddark transition duration-200">
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
+
 
 
