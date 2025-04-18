@@ -20,10 +20,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='patientprofile',
             name='user',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='patient_profile', to=settings.AUTH_USER_MODEL),
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='accounts_patient_profile_table', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterModelTable(
             name='patientprofile',
-            table='patient_table',
+            table='accounts_patient_profile_table',
         ),
     ]

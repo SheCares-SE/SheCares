@@ -4,9 +4,10 @@ from django.db import connection
 from gync.models import DoctorProfile
 from SC.shared_models import Blog
 from .forms import BlogForm
-from django.http import JsonResponse
 from django.contrib import messages
-from django.http import HttpResponse
+from datetime import datetime, timedelta
+from django.utils import timezone
+from accounts.models import User, DoctorProfile
 
 @login_required
 def doctor_dashboard(request):
@@ -58,13 +59,6 @@ def blog_detail(request, blog_id):
     blog = get_object_or_404(Blog, id=blog_id)
     return render(request, 'gync/blog_detail.html', {'blog': blog})
 
-#aishna
-
-
-from django.shortcuts import render, redirect
-from django.db import connection
-from django.contrib.auth.decorators import login_required
-
 @login_required
 def doctor_appointments_view(request):
     print(f"Debug: Logged-in User ID -> {request.user.id}")
@@ -73,16 +67,10 @@ def doctor_appointments_view(request):
     user_id = request.user.id
     print(f"User ID: {user_id}")
 
-    # Fetch doctor ID from doctor_table
-    # with connection.cursor() as cursor:
-    #     cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
-    #     doctor_table = cursor.fetchone()
     with connection.cursor() as cursor:
           cursor.execute("SELECT id FROM doctor_table WHERE user_id = %s", [user_id])
           doctor_table = cursor.fetchone()
     print(f"Raw doctor_table result: {doctor_table}")  # Debugging line
-    # if not doctor_table:  # Ensure doctor exists
-    #     return render(request, 'error_page.html', {'message': 'Doctor profile not found'})
 
     doctor_id = doctor_table[0]
     print(f"Doctor ID: {doctor_id}")
@@ -109,9 +97,6 @@ def doctor_appointments_view(request):
         """, [user_id])
         confirmed_appointments = cursor.fetchall()
 
-    print("Pending Appointments:", pending_appointments)
-    print("Confirmed Appointments:",confirmed_appointments)
-
     return render(request, 'gync/doctor_appointments.html', {
         'pending_appointments': pending_appointments,
         'confirmed_appointments': confirmed_appointments
@@ -130,22 +115,20 @@ def reject_appointment(request, appointment_id):
         cursor.execute("UPDATE gync_appointment SET status = 'Rejected' WHERE id = %s", [appointment_id])
         connection.commit()
     return redirect('gync:doctor_appointments')
-from datetime import datetime, timedelta
-from django.utils import timezone
-from django.db import connection
-from django.shortcuts import render, get_object_or_404
-from accounts.models import User, DoctorProfile
+
+
+
 def get_available_slots(doctor_id, date=None):
     if date is None:
         date = timezone.localdate()
 
+    # Fetch doctor profile details using the doctor_id
     with connection.cursor() as cursor:
-        # Fetch doctor profile details from doctor_table
         cursor.execute("""
             SELECT opening_time, closing_time, break_start, break_end 
             FROM doctor_table 
             WHERE user_id = %s
-        """, [doctor_id])
+        """, [doctor_id])  # Use doctor_id directly
         row = cursor.fetchone()
     
     if not row:
@@ -169,7 +152,7 @@ def get_available_slots(doctor_id, date=None):
             SELECT time 
             FROM gync_appointment 
             WHERE doctor_id = %s AND status = 'Confirmed' AND date = %s
-        """, [doctor_id, date])
+        """, [doctor_id, date])  # Use doctor_id directly
         appointments = cursor.fetchall()
     
     booked_slots = set()
@@ -212,28 +195,17 @@ def get_available_slots(doctor_id, date=None):
     else:
         generate_slots(opening_time, closing_time)
     
-    corrected_slots = []
-    for start, end in available_slots:
-        start_time = datetime.strptime(start, "%I:%M %p")
-        end_time = datetime.strptime(end, "%I:%M %p")
+    return available_slots
 
-        if start_time.hour < 8:
-            start_time = start_time.replace(hour=start_time.hour + 12)
-        if end_time.hour < 8:
-            end_time = end_time.replace(hour=end_time.hour + 12)
-
-        corrected_slots.append((
-            start_time.strftime("%I:%M %p").lstrip("0"),
-            end_time.strftime("%I:%M %p").lstrip("0")
-        ))
-    
-    return corrected_slots
-
+@login_required
 def doctor_available_slots(request, doctor_id):
     date_str = request.GET.get('date')
     date = datetime.strptime(date_str, "%Y-%m-%d").date() if date_str else timezone.localdate()
     
+    # Fetch the doctor object to pass to the template
     doctor = get_object_or_404(User, id=doctor_id)
+    
+    # Pass the doctor_id (integer) to the get_available_slots function
     available_slots = get_available_slots(doctor_id, date)
     
     return render(request, 'gync/doctor_available_slots.html', {

@@ -1,18 +1,15 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from SC.shared_models import Blog
 from django.db import connection
-from gync.models import DoctorProfile, Appointment
+from gync.models import DoctorProfile
 from .forms import AppointmentForm
 import logging
-from django.http import JsonResponse
-from .models import Doctor
-from datetime import datetime , timedelta 
+from datetime import datetime , timedelta
+from .models import DoctorProfile
 
 
 logger = logging.getLogger(__name__)
 
-# Ensure no multiple definitions for patient_dashboard
 
 @login_required
 def patient_dashboard(request):
@@ -29,8 +26,9 @@ def patient_dashboard(request):
 
     return render(request, 'patient/patient_dashboard.html', {
         'appointments': appointments,
-   
     })
+
+
 
 def get_doctors():
     with connection.cursor() as cursor:
@@ -39,51 +37,6 @@ def get_doctors():
     return [{"id": doctor[0], "username": doctor[1]} for doctor in doctors]  # Return list of dictionaries
 
 
-from django.shortcuts import render, redirect
-from django.db import connection
-from django.contrib.auth.decorators import login_required
-from datetime import datetime
-from .models import DoctorProfile
-from .forms import AppointmentForm
-# @login_required
-# def book_appointment(request):
-#     doctors = get_doctors()  # Get doctors using raw SQL
-
-#     if request.method == 'POST':
-#         form = AppointmentForm(request.POST, doctors=doctors)
-
-#         if form.is_valid():
-#             doctor_id = int(form.cleaned_data['doctor'])
-#             date = form.cleaned_data['date']
-#             time = form.cleaned_data['time']
-#             date_new = date.strftime('%Y-%m-%d')
-#             time_new = time.strftime('%H:%M:%S')  
-#             patient_id = request.user.id  
-            
-#             # Fetch doctor details from the database
-#             try:
-#                 doctor = DoctorProfile.objects.get(user_id=doctor_id)
-#             except DoctorProfile.DoesNotExist:
-#                 form.add_error('doctor', 'Selected doctor does not exist.')
-#                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
-
-#             if not is_valid_appointment(doctor, time):
-#                 print("Adding error to form")
-#                 form.add_error('time', 'Appointment time is outside working hours or during the break.')
-#                 return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
-
-#             with connection.cursor() as cursor:
-#                 query = """ INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status) VALUES (%s, %s, %s, %s, 'Pending')"""
-#                 params = (patient_id, doctor_id, date_new, time_new)
-#                 cursor.execute(query, params)
-
-#             return redirect('patient:patient_appointments')
-#         else:
-#             print(form.errors)  # Debugging errors
-#     else:
-#         form = AppointmentForm(doctors=doctors)  # Pass doctors list to form
-
-#     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 @login_required
 def book_appointment(request):
     doctors = get_doctors()  # Get doctors using raw SQL
@@ -134,7 +87,9 @@ def book_appointment(request):
 
     return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
 
+
 # Function to validate appointment time
+@login_required
 def is_valid_appointment(doctor, appointment_time):
     """Check if the appointment time is within working hours and not during break."""
     opening = doctor.opening_time
@@ -146,7 +101,6 @@ def is_valid_appointment(doctor, appointment_time):
         return False
     if break_start <= appointment_time <= break_end:  # Must not be during break
         return False
-
     return True
 
 
@@ -174,9 +128,8 @@ def patient_appointments(request):
         }
         for row in appointments
     ]
-
-
     return render(request, "patient/patient_appointments.html", {"appointments": appointments_list})
+
 
 @login_required
 def cancel_appointment(request, appointment_id):
@@ -197,8 +150,7 @@ def cancel_appointment(request, appointment_id):
         # Check if the appointment is at least 1 hour away
         if appointment_time > (current_time + timedelta(hours=1)):
             cursor.execute("UPDATE gync_appointment SET status = 'Cancelled' WHERE id = %s", [appointment_id])
-            print(f"Appointment {appointment_id} cancelled successfully")
+            # print(f"Appointment {appointment_id} cancelled successfully")
         else:
             print("Cannot cancel appointment less than 1 hour before the time.")
-
     return redirect('patient:patient_appointments')
