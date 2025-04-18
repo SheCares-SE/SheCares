@@ -1,38 +1,3 @@
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h2>Book Appointment</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="doctor">Doctor</label>
-                <select name="doctor" class="form-select" required>
-                    {% for doctor in doctors %}
-                        <option value="{{ doctor.id }}">{{ doctor.username }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="date">Date</label>
-                {{ form.date }}
-            </div>
-            <div class="mb-3">
-                <label for="time">Time</label>
-                {{ form.time }}
-            </div>
-            <button type="submit" class="btn btn-primary">Book Appointment</button>
-        </form>
-        
-    </div>
-</body>
-</html> {% endcomment %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -209,52 +174,65 @@ button:hover {
 
     <div class="container1 mt-5">
         <h2>Book Appointment</h2>
-
-        <form method="post">
-            {% csrf_token %}
+        
+        <!-- Search Form -->
+        <form method="GET" class="mb-4">
             <div class="mb-3">
-                <label for="doctor">Doctor</label>
-                <select name="doctor" id="doctor" class="form-select" required>
-                    {% for doctor in doctors %}
-                        <option value="{{ doctor.id }}">{{ doctor.username }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.doctor.errors %}
-                    <div class="text-danger">
-                        {% for error in form.doctor.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                <label for="doctor_search" class="form-label">Search Doctor</label>
+                <div class="input-group">
+                    <input type="text" 
+                           name="doctor_search" 
+                           id="doctor_search" 
+                           class="form-control" 
+                           placeholder="Enter doctor name..."
+                           value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label for="id_date">Date</label>
-                {{ form.date }}
-                {% if form.date.errors %}
-                    <div class="text-danger">
-                        {% for error in form.date.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="id_time">Time</label>
-                {{ form.time }}
-                {% if form.time.errors %}
-                    <div class="text-danger">
-                        {% for error in form.time.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="btn btn-primary">Book Appointment</button>
         </form>
+
+        <!-- Doctor List -->
+        {% if doctors %}
+            <div class="list-group mb-4">
+                {% for doctor in doctors %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Dr. {{ doctor.username }}</span>
+                            <form method="post" action="{% url 'patient:book_appointment' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                                <button type="submit" class="btn btn-success btn-sm">Select</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Appointment Form -->
+        {% if selected_doctor %}
+            <div class="mt-4">
+                <h4>Book appointment with Dr. {{ selected_doctor.username }}</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="doctor" value="{{ selected_doctor.id }}">
+                    {% for field in form %}
+                        {% if field.name != 'doctor' %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Book Appointment</button>
+                </form>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
-
