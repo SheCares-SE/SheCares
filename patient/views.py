@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.db import connection
 from gync.models import DoctorProfile
 from .forms import AppointmentForm
+from django.http import Http404
 import logging
 from datetime import datetime , timedelta
 from .models import DoctorProfile
+from django.contrib import messages
 
 
 logger = logging.getLogger(__name__)
@@ -32,60 +34,73 @@ def patient_dashboard(request):
 
 def get_doctors():
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id, username FROM accounts_user WHERE role = 'doctor'")
-        doctors = cursor.fetchall()
-    return [{"id": doctor[0], "username": doctor[1]} for doctor in doctors]  # Return list of dictionaries
+        cursor.execute("""
+            SELECT id, username 
+            FROM accounts_user 
+            WHERE role = 'doctor'
+        """)
+        # Convert to list of dictionaries consistently
+        return [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
 
 
 @login_required
 def book_appointment(request):
-    doctors = get_doctors()  # Get doctors using raw SQL
+    search_query = request.GET.get('doctor_search', '')
+    selected_doctor = None
+    doctors = []
 
+    # Handle doctor selection
     if request.method == 'POST':
-        form = AppointmentForm(request.POST, doctors=doctors)
-
-        if form.is_valid():
-            doctor_id = int(form.cleaned_data['doctor'])
-            date = form.cleaned_data['date']
-            time = form.cleaned_data['time']
-            appointment_datetime = datetime.combine(date, time)
-
-            # Prevent booking in the past or present moment
-            if appointment_datetime <= datetime.now():
-                form.add_error('date', 'You can only book future appointments.')
-                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
-
-            date_new = date.strftime('%Y-%m-%d')
-            time_new = time.strftime('%H:%M:%S')  
-            patient_id = request.user.id  
-
-            # Fetch doctor details from the database
-            try:
-                doctor = DoctorProfile.objects.get(user_id=doctor_id)
-            except DoctorProfile.DoesNotExist:
-                form.add_error('doctor', 'Selected doctor does not exist.')
-                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
-
-            if not is_valid_appointment(doctor, time):
-                form.add_error('time', 'Appointment time is outside working hours or during the break.')
-                return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
-
-            # Save appointment using raw SQL
+        doctor_id = request.POST.get('doctor_id')
+        if doctor_id:
             with connection.cursor() as cursor:
-                query = """
-                    INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status)
-                    VALUES (%s, %s, %s, %s, 'Pending')
-                """
-                params = (patient_id, doctor_id, date_new, time_new)
-                cursor.execute(query, params)
+                cursor.execute("""
+                    SELECT id, username 
+                    FROM accounts_user 
+                    WHERE id = %s AND role = 'doctor'
+                """, [doctor_id])
+                doctor_data = cursor.fetchone()
+                if doctor_data:
+                    selected_doctor = {"id": doctor_data[0], "username": doctor_data[1]}
 
-            return redirect('patient:patient_appointments')
-        else:
-            print(form.errors)  # Debugging form errors
-    else:
-        form = AppointmentForm(doctors=doctors)  # Initialize empty form with doctors
+    # Handle doctor search
+    if search_query:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, username 
+                FROM accounts_user
+                WHERE username LIKE %s AND role = 'doctor'
+            """, ['%' + search_query + '%'])
+            doctors = [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
 
-    return render(request, 'patient/book_appointment.html', {'form': form, 'doctors': doctors})
+    form = AppointmentForm()
+
+    return render(request, 'patient/book_appointment.html', {
+        'form': form,
+        'doctors': doctors,
+        'search_query': search_query,
+        'selected_doctor': selected_doctor,
+    })
+
+
+@login_required
+def book_this_doctor(request, doctor_id):
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, username 
+                FROM accounts_user 
+                WHERE id = %s AND role = 'doctor'
+            """, [doctor_id])
+            doctor = cursor.fetchone()
+            
+            if doctor:
+                request.session['selected_doctor_id'] = doctor_id
+                messages.success(request, f'Doctor selected: Dr. {doctor[1]}')
+                return redirect('patient:book_appointment')
+            
+    messages.error(request, 'Invalid doctor selection')
+    return redirect('patient:book_appointment')
 
 
 # Function to validate appointment time
