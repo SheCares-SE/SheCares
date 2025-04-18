@@ -379,11 +379,11 @@ def edit_profile(request):
                         WHERE id = %s
                     """, [username, user.id])
             user.save()
-            return redirect('accounts:profile_view')   # Redirect to the profile page
+            return redirect('accounts:profile')   # Redirect to the profile page
 
         else:
             print("Form errors:", form.errors)  # Add this line
-            messages.error(request, "Error updating profile. Please check your inputs.")
+            # messages.error(request, "Error updating profile. Please check your inputs.")
 
     else:
         form = ProfileUpdateForm(user_type=user_type, initial=initial_data)
