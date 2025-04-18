@@ -21,12 +21,21 @@ def get_doctor_table_view(request, doctor_id):
 
 @login_required
 def blog_list(request):
-    if request.user.role == 'doctor':
-        blogs = Blog.objects.filter(author=request.user)
-    else:
-        blogs = Blog.objects.all()
+    # Get the "show_all" parameter from the URL query string
     show_all = request.GET.get("show_all", "false") == "true"
+
+    if show_all:
+        # If "show_all" is True, fetch all blogs
+        blogs = Blog.objects.all()
+    else:
+        # If "show_all" is False, show only the blogs created by the current user (doctor)
+        if request.user.role == 'doctor':
+            blogs = Blog.objects.filter(author=request.user)
+        else:
+            blogs = Blog.objects.all()  # Non-doctor users can view all blogs (or you can customize this further)
+
     return render(request, 'gync/blog_list.html', {'blogs': blogs, 'show_all': show_all})
+
 @login_required
 def blog_create(request):
     if request.user.role != 'doctor':
