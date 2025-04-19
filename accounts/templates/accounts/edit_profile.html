@@ -13,7 +13,6 @@
     <h2 class="text-2xl font-bold text-center text-blue-700">Edit Profile</h2>
     <form method="post" action="" enctype="multipart/form-data" class="mt-4 space-y-4">
       {% csrf_token %}
-
       <!-- Profile Picture -->
       <div>
         <label class="block text-gray-700">Profile Picture</label>
@@ -22,7 +21,6 @@
         {% endif %}
         <input type="file" name="profile_picture" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
       </div>
-
       <!-- Username -->
       <div>
         <label class="block text-gray-700">Username</label>
@@ -90,9 +88,7 @@
       <!-- Submit Button -->
       <div class="flex justify-center">
         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition">
-          <a href="{% url 'accounts:select_role' %}" class="text-blue-300 hover:underline font-semibold">
-            Save Changes
-          </a>
+          Save Changes
         </button>
       </div>
     </form>

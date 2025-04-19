@@ -275,7 +275,7 @@ def edit_profile(request):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT d.registration_number, d.specialization, a.username, d.city, 
-                    d.opening_time, d.closing_time, d.break_start, d.break_end
+                d.opening_time, d.closing_time, d.break_start, d.break_end
                 FROM doctor_table d 
                 JOIN accounts_user a ON a.id = d.user_id
                 WHERE d.user_id = %s
@@ -350,16 +350,14 @@ def edit_profile(request):
                 # with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        UPDATE doctor_table 
-                        SET registration_number = %s, specialization = %s, city = %s, opening_time=%s, closing_time=%s,break_start=%s, break_end=%s
+                        UPDATE doctor_table SET registration_number = %s, specialization = %s, city = %s, opening_time=%s, closing_time=%s,break_start=%s, break_end=%s
                         WHERE user_id = %s
                      """, [registration_number, specialization,city,opening_time,closing_time,break_start,break_end, user.id])
                     connection.commit()
 
     # Update accounts_user (username)
                     cursor.execute("""
-                            UPDATE accounts_user
-                            SET username = %s
+                            UPDATE accounts_user SET username = %s
                             WHERE id = %s
                     """, [username, user.id])
 
