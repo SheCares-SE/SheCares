@@ -19,23 +19,103 @@ def get_doctor_table_view(request, doctor_id):
         return render(request, 'doctor_table.html', {'doctor': doctor})
     except DoctorProfile.DoesNotExist:
         return render(request, '404.html')  # Or any other error page
-
+    
 @login_required
 def blog_list(request):
-    # Get the "show_all" parameter from the URL query string
     show_all = request.GET.get("show_all", "false") == "true"
+    user_id = request.user.id
+    user_role = request.user.role
 
-    if show_all:
-        # If "show_all" is True, fetch all blogs
-        blogs = Blog.objects.all()
-    else:
-        # If "show_all" is False, show only the blogs created by the current user (doctor)
-        if request.user.role == 'doctor':
-            blogs = Blog.objects.filter(author=request.user)
+    with connection.cursor() as cursor:
+        if show_all:
+            cursor.execute("SELECT id, title, content, created_at FROM SC_blog")
         else:
-            blogs = Blog.objects.all()  # Non-doctor users can view all blogs (or you can customize this further)
+            if user_role == 'doctor':
+                cursor.execute("SELECT id, title, content, created_at FROM SC_blog WHERE author_id = %s", [user_id])
+            else:
+                cursor.execute("SELECT id, title, content, created_at FROM SC_blog")
+
+        rows = cursor.fetchall()
+        blogs = [
+            {
+                'id': row[0],
+                'title': row[1],
+                'content': row[2],
+                'created_at': row[3]
+            } for row in rows
+        ]
 
     return render(request, 'gync/blog_list.html', {'blogs': blogs, 'show_all': show_all})
+@login_required
+def blog_list(request):
+    show_all = request.GET.get("show_all", "false") == "true"
+    user_id = request.user.id
+    user_role = request.user.role
+
+    with connection.cursor() as cursor:
+        if show_all:
+            cursor.execute("SELECT id, title, content, created_at FROM SC_blog")
+        else:
+            if user_role == 'doctor':
+                cursor.execute("SELECT id, title, content, created_at FROM SC_blog WHERE author_id = %s", [user_id])
+            else:
+                cursor.execute("SELECT id, title, content, created_at FROM SC_blog")
+
+        rows = cursor.fetchall()
+        blogs = [
+            {
+                'id': row[0],
+                'title': row[1],
+                'content': row[2],
+                'created_at': row[3]
+            } for row in rows
+        ]
+
+    return render(request, 'gync/blog_list.html', {'blogs': blogs, 'show_all': show_all})
+
+
+
+# @login_required
+# def blog_list(request):
+#     show_all = request.GET.get("show_all", "false") == "true"
+#     user_id = request.user.id
+#     user_role = request.user.role
+
+#     with connection.cursor() as cursor:
+#         if user_role == 'doctor':
+#             cursor.execute("SELECT id, title, content, created_at FROM SC_blog WHERE author_id = %s", [user_id])
+#         else:
+#             cursor.execute("SELECT id, title, content, created_at FROM SC_blog")
+
+#         rows = cursor.fetchall()
+#         blogs = [
+#             {
+#                 'id': row[0],
+#                 'title': row[1],
+#                 'content': row[2],
+#                 'created_at': row[3]
+#             } for row in rows
+#         ]
+
+#     return render(request, 'gync/blog_list.html', {'blogs': blogs, 'show_all': show_all})
+
+
+# @login_required
+# def blog_create(request):
+#     if request.user.role != 'doctor':
+#         messages.error(request, "Only doctors can create blogs.")
+#         return redirect('gync:blog_list')
+
+#     if request.method == "POST":
+#         form = BlogForm(request.POST)
+#         if form.is_valid():
+#             blog = form.save(commit=False)
+#             blog.author = request.user
+#             blog.save()
+#             return redirect('gync:blog_list')
+#     else:
+#         form = BlogForm()
+#     return render(request, 'gync/blog_create.html', {'form': form})
 
 @login_required
 def blog_create(request):
@@ -46,18 +126,39 @@ def blog_create(request):
     if request.method == "POST":
         form = BlogForm(request.POST)
         if form.is_valid():
-            blog = form.save(commit=False)
-            blog.author = request.user
-            blog.save()
+            title = form.cleaned_data['title']
+            content = form.cleaned_data['content']
+            author_id = request.user.id
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO SC_blog (author_id, title, content, created_at) VALUES (%s, %s, %s, NOW())",
+                    [author_id, title, content]
+                )
             return redirect('gync:blog_list')
     else:
         form = BlogForm()
     return render(request, 'gync/blog_create.html', {'form': form})
 
+
+
 @login_required
 def blog_detail(request, blog_id):
-    blog = get_object_or_404(Blog, id=blog_id)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, title, content, created_at FROM SC_blog WHERE id = %s", [blog_id])
+        row = cursor.fetchone()
+        if not row:
+            return redirect('gync:blog_list')  # or return 404 page
+
+        blog = {
+            'id': row[0],
+            'title': row[1],
+            'content': row[2],
+            'created_at': row[3]
+        }
+
     return render(request, 'gync/blog_detail.html', {'blog': blog})
+
 
 @login_required
 def doctor_appointments_view(request):

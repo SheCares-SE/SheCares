@@ -42,7 +42,7 @@
         <p class="max-w-md mb-6">
           We're glad to have you onboard. SheCares is designed to help you explore servies and get expert advice!
         </p>
-        <a href="{% url 'gync:doctor_appointments' %}" class="inline-block bg-white text-indigo-800 font-semibold px-6 py-2 rounded-full hover:bg-gray-100 transition">
+        <a href="{% url 'patient:book_appointment' %}" class="inline-block bg-white text-indigo-800 font-semibold px-6 py-2 rounded-full hover:bg-gray-100 transition">
           View Appointments
         </a>
 
@@ -58,7 +58,7 @@
     </div>
 
     <!-- Right Section -->
-    <div class="flex-1 flex items-center justify-center">
+    <!-- <div class="flex-1 flex items-center justify-center">
       {% comment %} <img src="{% static 'images/dashboardpic.png' %}" alt="Pregnant Woman Illustration" class="max-h-[500px] object-contain"> {% endcomment %}
     </div>
   </div>
@@ -67,7 +67,14 @@
     .clip-path-custom {
       clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
     }
-  </style>
+  </style> -->
+
+  <div class="flex-1 flex flex-col items-center justify-start bg-[#f1f5f4] p-6">
+  <!-- Illustration -->
+  <div class="w-full max-w-md mb-8">
+    <img src="{% static 'images/sthetoscope.png' %}" alt="Illustration" class="w-full h-auto object-contain">
+  </div>
+
 
 </body>
 </html>

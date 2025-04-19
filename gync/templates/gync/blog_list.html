@@ -31,31 +31,28 @@
           <p class="text-sm text-greenlight mb-2">GynCare • Reading Blogs?</p>
           <h1 class="text-4xl font-bold leading-snug mb-4 text-greenlight">Your well-being starts with understanding.</h1>
           <p class="text-emerald-100 mb-6">Dive into stories and tips shared by gynecologists who care about your health and healing. one blog at a time.</p>
-          <!-- <a href="#" class="inline-block px-6 py-2 bg-emerald text-white font-medium rounded-full hover:bg-emeralddark transition">Continue Reading →</a> -->
-           <!-- Action Buttons -->
-<div class="mt-8 space-y-4">
-    {% if user.role == 'doctor' %}
-      <a href="{% url 'gync:blog_create' %}" 
-         class="inline-block px-6 py-2 bg-emerald text-white font-medium rounded-full hover:bg-emeralddark transition">
-        + Write a New Blog →
-      </a>
-    {% endif %}
-  
-    <div>
-      {% if show_all %}
-        <a href="{% url 'gync:blog_list' %}" class="text-emerald font-semibold hover:underline">
-          Show My Blogs
-        </a>
-      {% else %}
-        <a href="{% url 'gync:blog_list' %}?show_all=true" class="text-neutral-300
-        font-semibold hover:underline">
-          Show All Blogs
-        </a>
-      {% endif %}
-    </div>
-  </div>
-  
-
+          
+          <!-- Action Buttons -->
+          <div class="mt-8 space-y-4">
+            {% if user.role == 'doctor' %}
+              <a href="{% url 'gync:blog_create' %}" 
+                 class="inline-block px-6 py-2 bg-emerald text-white font-medium rounded-full hover:bg-emeralddark transition">
+                + Write a New Blog →
+              </a>
+            {% endif %}
+        
+            <div>
+              {% if show_all %}
+                <a href="{% url 'gync:blog_list' %}" class="text-emerald font-semibold hover:underline">
+                  Show My Blogs
+                </a>
+              {% else %}
+                <a href="{% url 'gync:blog_list' %}?show_all=true" class="text-neutral-300 font-semibold hover:underline">
+                  Show All Blogs
+                </a>
+              {% endif %}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -63,9 +60,7 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for blog in blogs %}
         <a href="{% url 'gync:blog_detail' blog.id %}" class="group bg-emeralddark p-5 rounded-2xl hover:bg-emerald transition duration-300 shadow-xl">
-          <img src="{{ blog.thumbnail.url|default:'https://source.unsplash.com/400x300/?nature,healthcare' }}" 
-               alt="Blog Image" 
-               class="w-full h-40 object-cover rounded-xl mb-4" />
+          <!-- Removed the image tag here -->
           <h3 class="text-xl font-semibold mb-2 group-hover:text-greenlight">{{ blog.title }}</h3>
           <p class="text-greenlight text-sm mb-1">{{ blog.created_at|date:"F d, Y" }} • Blog</p>
           <p class="text-emerald-100 text-sm">Click to read more</p>
@@ -75,8 +70,6 @@
         {% endfor %}
       </div>
 
-
     </div>
   </body>
 </html>
-
