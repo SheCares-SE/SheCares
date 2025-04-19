@@ -13,7 +13,7 @@ def get_doctor_choices():
     return [(doctor[0], doctor[1]) for doctor in doctors]  # Returning (id, name) tuples
 
 class AppointmentForm(forms.Form):
-    doctor = forms.ChoiceField(choices=[], required=True)
+    doctor = forms.ChoiceField(label='Select Doctor')
     date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}), required=True)
 

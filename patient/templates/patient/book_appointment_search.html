@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Doctor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        /* Navbar Styling */
+        .navbar {
+            background-color: #fff;
+            border-bottom: 2px solid #e3e3e3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 20;
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e3c72 !important;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand.reverse {
+            flex-direction: row-reverse;
+        }
+        .navbar-brand .brand-text {
+            margin-left: 10px;
+        }
+        .navbar-brand img {
+            height: 40px;
+            width: 40px;
+            border: 2px solid #1e3c72;
+            border-radius: 50%;
+        }
+        .nav-link {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #1e3c72 !important;
+            margin-left: 15px;
+        }
+        .nav-link:hover {
+            color: #0d1a33 !important;
+        }
+
+        /* General Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f8fb;
+        }
+        .container1 {
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            margin: 40px auto;
+        }
+        h2 {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .list-group {
+            margin-top: 20px;
+        }
+        .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.125);
+            border-radius: 0.25rem;
+            margin-bottom: -1px;
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand reverse" href="#">
+                <span class="brand-text">SheCares - Patient</span>
+                <img src="{% static 'images/logo.jpeg' %}" alt="SheCares Logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_dashboard' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'patient:patient_appointments' %}">Appointments</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'patient:book_appointment' %}">Book Appointment</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:recommend_doctor' %}">Doctor</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'gync:blog_list' %}">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:faq_page' %}">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container1 mt-5">
+        <h2>Search Doctor</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="GET" class="mb-4">
+            <label for="doctor_search" class="form-label">Search Doctor</label>
+            <div class="input-group">
+                <input type="text" name="doctor_search" id="doctor_search" class="form-control" placeholder="Enter doctor name..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+
+        {% if doctors %}
+            <div class="list-group">
+                {% for doctor in doctors %}
+                    <a href="{% url 'patient:select_doctor' doctor_id=doctor.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span>Dr. {{ doctor.username }}</span>
+                        <button class="btn btn-success btn-sm">Select</button>
+                    </a>
+                {% endfor %}
+            </div>
+        {% elif search_query %}
+            <p class="text-muted">No doctors found matching your search query.</p>
+        {% else %}
+            <p class="text-muted">Enter a doctor's name to search.</p>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -43,67 +43,169 @@ def get_doctors():
         return [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
 
 
+# @login_required
+# def book_appointment(request):
+#     search_query = request.GET.get('doctor_search', '')
+#     selected_doctor = None
+#     doctors = []
+
+#     # Handle doctor selection
+#     if request.method == 'POST':
+#         doctor_id = request.POST.get('doctor_id')
+#         if doctor_id:
+#             with connection.cursor() as cursor:
+#                 cursor.execute("""
+#                     SELECT id, username 
+#                     FROM accounts_user 
+#                     WHERE id = %s AND role = 'doctor'
+#                 """, [doctor_id])
+#                 doctor_data = cursor.fetchone()
+#                 if doctor_data:
+#                     selected_doctor = {"id": doctor_data[0], "username": doctor_data[1]}
+
+#     # Handle doctor search
+#     if search_query:
+#         with connection.cursor() as cursor:
+#             cursor.execute("""
+#                 SELECT id, username 
+#                 FROM accounts_user
+#                 WHERE username LIKE %s AND role = 'doctor'
+#             """, ['%' + search_query + '%'])
+#             doctors = [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
+
+#     form = AppointmentForm()
+
+#     return render(request, 'patient/book_appointment.html', {
+#         'form': form,
+#         'doctors': doctors,
+#         'search_query': search_query,
+#         'selected_doctor': selected_doctor,
+#     })
+
+
+# @login_required
+# def book_this_doctor(request, doctor_id):
+#     if request.method == 'POST':
+#         with connection.cursor() as cursor:
+#             cursor.execute("""
+#                 SELECT id, username 
+#                 FROM accounts_user 
+#                 WHERE id = %s AND role = 'doctor'
+#             """, [doctor_id])
+#             doctor = cursor.fetchone()
+            
+#             if doctor:
+#                 request.session['selected_doctor_id'] = doctor_id
+#                 messages.success(request, f'Doctor selected: Dr. {doctor[1]}')
+#                 return redirect('patient:book_appointment')
+            
+#     messages.error(request, 'Invalid doctor selection')
+#     return redirect('patient:book_appointment')
+
 @login_required
-def book_appointment(request):
+def book_appointment_search(request):
     search_query = request.GET.get('doctor_search', '')
-    selected_doctor = None
     doctors = []
 
-    # Handle doctor selection
-    if request.method == 'POST':
-        doctor_id = request.POST.get('doctor_id')
-        if doctor_id:
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT id, username 
-                    FROM accounts_user 
-                    WHERE id = %s AND role = 'doctor'
-                """, [doctor_id])
-                doctor_data = cursor.fetchone()
-                if doctor_data:
-                    selected_doctor = {"id": doctor_data[0], "username": doctor_data[1]}
-
-    # Handle doctor search
     if search_query:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT id, username 
+                SELECT id, username
                 FROM accounts_user
                 WHERE username LIKE %s AND role = 'doctor'
             """, ['%' + search_query + '%'])
             doctors = [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
 
-    form = AppointmentForm()
-
-    return render(request, 'patient/book_appointment.html', {
-        'form': form,
+    return render(request, 'patient/book_appointment_search.html', {
         'doctors': doctors,
         'search_query': search_query,
-        'selected_doctor': selected_doctor,
     })
 
-
 @login_required
-def book_this_doctor(request, doctor_id):
-    if request.method == 'POST':
+def select_doctor(request, doctor_id):
+    try:
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT id, username 
-                FROM accounts_user 
+                SELECT id, username
+                FROM accounts_user
                 WHERE id = %s AND role = 'doctor'
             """, [doctor_id])
-            doctor = cursor.fetchone()
-            
-            if doctor:
-                request.session['selected_doctor_id'] = doctor_id
-                messages.success(request, f'Doctor selected: Dr. {doctor[1]}')
-                return redirect('patient:book_appointment')
-            
-    messages.error(request, 'Invalid doctor selection')
-    return redirect('patient:book_appointment')
+            doctor_data = cursor.fetchone()
+            if doctor_data:
+                doctor = {"id": doctor_data[0], "username": doctor_data[1]}
+                request.session['selected_doctor'] = doctor
+                messages.success(request, f'Doctor selected: Dr. {doctor["username"]}')
+                return redirect('patient:book_appointment_form')
+            else:
+                messages.error(request, 'Invalid doctor selection.')
+                return redirect('patient:book_appointment_search')
+    except Exception as e:
+        messages.error(request, f'An error occurred: {e}')
+        return redirect('patient:book_appointment_search')
 
+@login_required
+def book_appointment_form(request):
+    selected_doctor = request.session.get('selected_doctor')
 
-# Function to validate appointment time
+    if not selected_doctor:
+        messages.warning(request, 'Please select a doctor first.')
+        return redirect('patient:book_appointment_search')
+
+    def get_all_doctors():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id, username FROM accounts_user WHERE role = 'doctor'")
+            doctors = [{"id": doctor[0], "username": doctor[1]} for doctor in cursor.fetchall()]
+        return doctors
+
+    all_doctors = get_all_doctors()  # Fetch doctors
+
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST, doctors=all_doctors)  # Pass doctors here
+        if form.is_valid():
+            date = form.cleaned_data['date']
+            time = form.cleaned_data['time']
+            appointment_datetime = datetime.combine(date, time)
+
+            if appointment_datetime <= datetime.now():
+                form.add_error('date', 'You can only book future appointments.')
+                return render(request, 'patient/book_appointment_form.html', {'form': form, 'selected_doctor': selected_doctor})
+
+            date_new = date.strftime('%Y-%m-%d')
+            time_new = time.strftime('%H:%M:%S')
+            patient_id = request.user.id
+            doctor_id = selected_doctor['id']
+
+            try:
+                doctor_profile = DoctorProfile.objects.get(user_id=doctor_id)
+                if not is_valid_appointment(doctor_profile, time):
+                    form.add_error('time', 'Appointment time is outside working hours or during the break.')
+                    return render(request, 'patient/book_appointment_form.html', {'form': form, 'selected_doctor': selected_doctor})
+
+                with connection.cursor() as cursor:
+                    query = """
+                        INSERT INTO gync_appointment (patient_id, doctor_id, date, time, status)
+                        VALUES (%s, %s, %s, %s, 'Pending')
+                    """
+                    params = (patient_id, doctor_id, date_new, time_new)
+                    cursor.execute(query, params)
+
+                messages.success(request, 'Appointment booked successfully!')
+                del request.session['selected_doctor']  # Clear selected doctor after booking
+                return redirect('patient:patient_appointments')
+
+            except DoctorProfile.DoesNotExist:
+                messages.error(request, 'Selected doctor does not exist.')
+                return redirect('patient:book_appointment_search')
+            except Exception as e:
+                messages.error(request, f'An error occurred while booking: {e}')
+                return render(request, 'patient/book_appointment_form.html', {'form': form, 'selected_doctor': selected_doctor})
+        else:
+            print(form.errors)
+    else:
+        form = AppointmentForm()
+
+    return render(request, 'patient/book_appointment_form.html', {'form': form, 'selected_doctor': selected_doctor})
+
 @login_required
 def is_valid_appointment(doctor, appointment_time):
     """Check if the appointment time is within working hours and not during break."""
@@ -117,7 +219,6 @@ def is_valid_appointment(doctor, appointment_time):
     if break_start <= appointment_time <= break_end:  # Must not be during break
         return False
     return True
-
 
 @login_required
 def patient_appointments(request):
