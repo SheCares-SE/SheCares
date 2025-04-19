@@ -63,9 +63,9 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for blog in blogs %}
         <a href="{% url 'gync:blog_detail' blog.id %}" class="group bg-emeralddark p-5 rounded-2xl hover:bg-emerald transition duration-300 shadow-xl">
-          <img src="{{ blog.thumbnail.url|default:'https://source.unsplash.com/400x300/?nature,healthcare' }}" 
-               alt="Blog Image" 
-               class="w-full h-40 object-cover rounded-xl mb-4" />
+          {% comment %} <img src="{{ blog.thumbnail.url|default:'https://source.unsplash.com/400x300/?nature,healthcare' }}" 
+               alt="Blog Image"  {% endcomment %}
+               {% comment %} class="w-full h-40 object-cover rounded-xl mb-4" /> {% endcomment %}
           <h3 class="text-xl font-semibold mb-2 group-hover:text-greenlight">{{ blog.title }}</h3>
           <p class="text-greenlight text-sm mb-1">{{ blog.created_at|date:"F d, Y" }} • Blog</p>
           <p class="text-emerald-100 text-sm">Click to read more</p>

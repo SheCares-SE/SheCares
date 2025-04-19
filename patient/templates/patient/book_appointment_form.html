@@ -146,9 +146,9 @@
         {% endif %}
 
         {% if selected_doctor %}
-            <div class="selected-doctor-info">
+            {% comment %} <div class="selected-doctor-info">
                 Doctor selected: Dr. {{ selected_doctor.username }}
-            </div>
+            </div> {% endcomment %}
             <h4>Appointment with Dr. {{ selected_doctor.username }}</h4>
             <form method="post" action="{% url 'patient:book_appointment_form' %}">
                 {% csrf_token %}

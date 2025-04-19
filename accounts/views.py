@@ -275,7 +275,7 @@ def edit_profile(request):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT d.registration_number, d.specialization, a.username, d.city, 
-                d.opening_time, d.closing_time, d.break_start, d.break_end
+                    d.opening_time, d.closing_time, d.break_start, d.break_end
                 FROM doctor_table d 
                 JOIN accounts_user a ON a.id = d.user_id
                 WHERE d.user_id = %s
@@ -350,14 +350,16 @@ def edit_profile(request):
                 # with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        UPDATE doctor_table SET registration_number = %s, specialization = %s, city = %s, opening_time=%s, closing_time=%s,break_start=%s, break_end=%s
+                        UPDATE doctor_table 
+                        SET registration_number = %s, specialization = %s, city = %s, opening_time=%s, closing_time=%s,break_start=%s, break_end=%s
                         WHERE user_id = %s
                      """, [registration_number, specialization,city,opening_time,closing_time,break_start,break_end, user.id])
                     connection.commit()
 
     # Update accounts_user (username)
                     cursor.execute("""
-                            UPDATE accounts_user SET username = %s
+                            UPDATE accounts_user
+                            SET username = %s
                             WHERE id = %s
                     """, [username, user.id])
 
@@ -389,6 +391,7 @@ def edit_profile(request):
     return render(request, 'accounts/edit_profile.html', {'form': form, 'user_type': user_type})
 
 
+
 @login_required
 def doctor_profile(request, doctor_id):
     with connection.cursor() as cursor:
@@ -404,8 +407,7 @@ def doctor_profile(request, doctor_id):
 
         if not doctor:
             return HttpResponse("Doctor not found", status=404)
-
-        # Fetch feedback
+                # Fetch feedback
         cursor.execute("""
             SELECT df.feedback, df.rating, u.username
             FROM doctor_feedback df
@@ -421,8 +423,7 @@ def doctor_profile(request, doctor_id):
             WHERE doctor_id = %s
         """, [doctor_id])
         avg_rating = cursor.fetchone()[0]
-
-    context = {
+        context = {
         "username": doctor[0],
         "last_name": doctor[1],
         "specialization": doctor[2],
@@ -436,6 +437,9 @@ def doctor_profile(request, doctor_id):
         "doctor_id": doctor_id
     }
     return render(request, 'accounts/doctor_profile.html', context)
+
+
+
 
 
 @login_required
