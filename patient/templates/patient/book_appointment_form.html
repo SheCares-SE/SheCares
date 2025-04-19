@@ -101,6 +101,14 @@
         .alert {
             margin-top: 20px;
         }
+        .selected-doctor-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -138,18 +146,23 @@
         {% endif %}
 
         {% if selected_doctor %}
+            <div class="selected-doctor-info">
+                Doctor selected: Dr. {{ selected_doctor.username }}
+            </div>
             <h4>Appointment with Dr. {{ selected_doctor.username }}</h4>
             <form method="post" action="{% url 'patient:book_appointment_form' %}">
                 {% csrf_token %}
                 <input type="hidden" name="doctor" value="{{ selected_doctor.id }}">
                 {% for field in form %}
-                    <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% for error in field.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
+                    {% if field.name != 'doctor' %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
                 <button type="submit" class="btn btn-primary">Book Appointment</button>
             </form>
